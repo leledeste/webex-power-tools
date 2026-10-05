@@ -1,0 +1,17 @@
+{
+  "name": "webex-power-tools",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Development checks for the Webex Power Tools Chrome extension.",
+  "scripts": {
+    "capture:settings": "node scripts/capture-settings.cjs",
+    "render:overview": "node scripts/render-overview.cjs",
+    "resize:icons": "node scripts/resize-icons.cjs",
+    "package": "node scripts/package.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "sharp": "0.35.4"
+  }
+}

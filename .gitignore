@@ -1,0 +1,14 @@
+node_modules/
+dist/
+test-results/
+tests/
+scripts/check-browser.cjs
+.agent*
+.codex/
+AGENTS.md
+AGENT.md
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,105 @@
+# Webex Power Tools
+
+**More control over your Webex recordings.**
+
+Hold to speed up, skip with mouse gestures, and control playback and audio with keyboard shortcuts. A lightweight Chrome extension with configurable controls, on-screen feedback, and 14 interface languages.
+
+![Webex Power Tools: playback gestures and English settings](docs/images/overview.png)
+
+**Version 1.0** · Chrome 127+ · Manifest V3 · No build step
+
+[Download v1.0.0][github-release] · [Chrome Web Store — listing coming soon][chrome-web-store] · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPMENT.md) · [Privacy](docs/PRIVACY.md)
+
+> The store link currently opens the Chrome Web Store homepage. Replace the `chrome-web-store` reference at the bottom of this file with the extension's listing URL once available. Until then, install locally using the steps below.
+
+## Features
+
+- **Hold to speed up:** hold Space or left click over the video. Release to restore the original speed. If playback was paused, it pauses again on release.
+- **Quick seeking:** double-click the left or right quarter to start seeking, then each extra click on that side adds another seek step. Right-click the video to seek backward.
+- **Keyboard controls:** J/K/L for seeking and play/pause, ↑/↓ for volume, and M for reversible mute.
+- **Custom settings:** independent backward/forward durations, temporary speed, volume steps, and individual feature switches.
+- **On-screen indicators:** temporary speed, cumulative seek actions, volume, and mute feedback.
+- **14 languages:** automatic browser-language detection, searchable language selection, and Arabic right-to-left layout.
+- **Synced preferences:** settings use Chrome extension sync storage, according to your profile and sync configuration.
+
+## Install locally
+
+1. Download the extension ZIP from the [GitHub release][github-release] and extract it, or clone this repository.
+2. In Chrome 127 or later, open `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Select **Load unpacked** and choose the folder containing `manifest.json`.
+5. Open or refresh a Webex recording on an HTTPS `webex.com` page.
+6. Open **Webex Power Tools** from the toolbar or Chrome's Extensions menu. Pin it for convenient access.
+
+No Node.js installation, package installation, or build command is needed to use the extension. When unpinned, it also displays a floating settings launcher on supported Webex pages.
+
+## Controls at a glance
+
+| Control | Action |
+| --- | --- |
+| Tap Space | Play / pause |
+| Hold Space | Temporary playback speed |
+| Hold left click over the video | Temporary playback speed |
+| Double-click the left quarter | Seek backward |
+| Double-click the right quarter | Seek forward |
+| Extra click on the same side within 850 ms | Seek another configured step; 5 seconds by default |
+| Double-click the center half | Leave the action to Webex, including its fullscreen behavior |
+| Right-click the video | Seek backward; replaces the context menu while enabled |
+| J / K / L | Seek backward / play-pause / seek forward |
+| ↑ / ↓ | Raise / lower volume |
+| M | Mute / unmute, restoring the saved volume and mute state |
+
+Shortcuts are ignored in editable fields, focused interactive controls, text composition, and modifier-key combinations. They apply only in frames containing media. Space still toggles play/pause when **hold to speed up** is disabled.
+
+## Defaults
+
+| Setting | Default | Available values |
+| --- | --- | --- |
+| Seek backward / forward | 5 seconds each | 1–120 seconds; presets: 5, 10, 15, 30 |
+| Temporary speed | 2× | 1.25×, 1.5×, 1.75×, 2×, 2.5×, 3×, 4× |
+| Volume step | 5% | 1–25% |
+| Language | Automatic | Browser language or explicit selection |
+| Gesture, shortcut, and indicator switches | Enabled | Individually configurable |
+
+Settings save automatically. **Restore defaults** resets all preferences, including language.
+
+## Compatibility and privacy
+
+The extension runs on HTTPS `webex.com` and its subdomains. It controls accessible HTML video/audio elements, including open shadow roots and matching frames. Closed shadow roots, inaccessible players, and frames outside allowed origins may limit support. Keyboard events must reach the player's frame.
+
+Webex Power Tools does not send recording content, browsing history, or analytics to a server. Only extension preferences are written to Chrome sync storage. See [privacy and permissions](docs/PRIVACY.md).
+
+Chrome 127+ is required for the floating launcher's programmatic popup API. See [Chrome's action API](https://developer.chrome.com/docs/extensions/reference/api/action#method-openPopup).
+
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [User guide](docs/USER_GUIDE.md) | Settings, gestures, mute behavior, and troubleshooting |
+| [Developer guide](docs/DEVELOPMENT.md) | Architecture, storage schema, checks, and local development |
+| [Localization](LOCALIZATION.md) | Supported languages and translation conventions |
+| [Privacy](docs/PRIVACY.md) | Data handling and permissions |
+| [Release checklist](docs/RELEASE.md) | Packaging, manual verification, and store-link replacement |
+| [Code review notes](docs/AUDIT.md) | Cleanup, fixes, and verification boundaries |
+| [Changelog](CHANGELOG.md) | Version 1.0 features |
+
+The overview combines an illustrative player with the actual English settings UI. The [full settings image](docs/images/settings.png) is rendered from the production popup with mocked Chrome storage and contains no real meeting content.
+
+## Development
+
+The extension runs without Node.js or a build step. With Node.js 22 or later, you can stage a distribution folder:
+
+```sh
+npm run package
+```
+
+See the [developer guide](docs/DEVELOPMENT.md) for architecture and documentation assets, and the [release checklist](docs/RELEASE.md) for manual browser verification. Automated test sources and agent configuration files are kept outside the published repository.
+
+Webex Power Tools is an independent project and is not affiliated with or endorsed by Cisco or Webex.
+
+## License
+
+Released under the [MIT License](LICENSE).
+
+[chrome-web-store]: https://chromewebstore.google.com/
+[github-release]: https://github.com/leledeste/webex-power-tools/releases/tag/v1.0.0

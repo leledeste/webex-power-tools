@@ -1,0 +1,963 @@
+(() => {
+  "use strict";
+
+  // English is the source dictionary and fallback for unsupported languages/keys.
+  const messages = {
+  "en": {
+    "appSubtitle": "Enhanced controls for Webex recordings",
+    "languageSection": "Language",
+    "languageSearchLabel": "Search languages",
+    "languageSearchPlaceholder": "Search a language…",
+    "languageNoResults": "No languages found",
+    "languageAuto": "Automatic",
+    "languageAutoHint": "Browser language: {language}",
+    "playbackSection": "Playback",
+    "playbackHint": "Seeking and playback speed",
+    "rewind": "Back",
+    "forward": "Forward",
+    "zonesNote": "Video areas: left 1/4 = back · center 1/2 = Webex/fullscreen · right 1/4 = forward",
+    "temporarySpeed": "Hold to speed up",
+    "temporarySpeedHint": "Hold Space or the left mouse button to speed up",
+    "spaceKey": "Spacebar",
+    "spaceKeyHint": "Tap to play/pause · hold to speed up",
+    "mouseSection": "Mouse",
+    "mouseSectionHint": "Video controls",
+    "mouseHold": "Hold left click",
+    "mouseHoldHint": "Speed up while held",
+    "lateralDoubleClick": "Double-click sides",
+    "lateralDoubleClickHint": "Left 1/4 = back · right 1/4 = forward",
+    "rightClickRewind": "Right click to go back",
+    "rightClickRewindHint": "Right-click the video to seek backward",
+    "keyboardSection": "Keyboard",
+    "keyboardHint": "Keyboard shortcuts",
+    "volumeArrows": "Arrow keys ↑ / ↓",
+    "volumeArrowsHint": "↑ volume up · ↓ volume down",
+    "volumeStep": "Volume step",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = back · K = play/pause · L = forward",
+    "muteShortcut": "M = Mute / Unmute",
+    "muteShortcutHint": "Restores the previous volume level when unmuted",
+    "interfaceSection": "Interface",
+    "interfaceHint": "On-screen indicators",
+    "showOverlays": "Show on-screen indicators",
+    "showOverlaysHint": "Show speed, seeking, volume and mute feedback",
+    "resetDefaults": "Restore defaults",
+    "information": "Information",
+    "infoText": "Settings are stored by Chrome and applied to Webex recordings. The extension does not collect recording data.",
+    "saved": "Saved",
+    "defaultsRestored": "Defaults restored",
+    "presetApplied": "{value}s set",
+    "overlayVolume": "Volume",
+    "overlayMuted": "Muted",
+    "launcherOpen": "Open Webex Power Tools"
+  },
+  "it": {
+    "appSubtitle": "Controlli avanzati per le registrazioni Webex",
+    "languageSection": "Lingua",
+    "languageSearchLabel": "Cerca lingue",
+    "languageSearchPlaceholder": "Cerca una lingua…",
+    "languageNoResults": "Nessuna lingua trovata",
+    "languageAuto": "Automatica",
+    "languageAutoHint": "Lingua del browser: {language}",
+    "playbackSection": "Riproduzione",
+    "playbackHint": "Navigazione e velocità di riproduzione",
+    "rewind": "Indietro",
+    "forward": "Avanti",
+    "zonesNote": "Aree del video: 1/4 sinistro = indietro · metà centrale = Webex/schermo intero · 1/4 destro = avanti",
+    "temporarySpeed": "Accelerazione temporanea",
+    "temporarySpeedHint": "Tieni premuta la barra spaziatrice o il tasto sinistro del mouse per accelerare",
+    "spaceKey": "Barra spaziatrice",
+    "spaceKeyHint": "Premi per riprodurre/pausa · tieni premuto per accelerare",
+    "mouseSection": "Mouse",
+    "mouseSectionHint": "Comandi sul video",
+    "mouseHold": "Tieni premuto il tasto sinistro",
+    "mouseHoldHint": "Accelera la riproduzione finché tieni premuto",
+    "lateralDoubleClick": "Doppio click sui lati",
+    "lateralDoubleClickHint": "1/4 sinistro = indietro · 1/4 destro = avanti",
+    "rightClickRewind": "Click destro per tornare indietro",
+    "rightClickRewindHint": "Fai click destro sul video per tornare indietro",
+    "keyboardSection": "Tastiera",
+    "keyboardHint": "Scorciatoie da tastiera",
+    "volumeArrows": "Frecce ↑ / ↓",
+    "volumeArrowsHint": "↑ aumenta il volume · ↓ diminuisce il volume",
+    "volumeStep": "Incremento volume",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = indietro · K = riproduci/pausa · L = avanti",
+    "muteShortcut": "M = Silenzia / Riattiva audio",
+    "muteShortcutHint": "Ripristina il livello di volume precedente quando riattivi l’audio",
+    "interfaceSection": "Interfaccia",
+    "interfaceHint": "Indicatori a schermo",
+    "showOverlays": "Mostra indicatori a schermo",
+    "showOverlaysHint": "Mostra velocità, spostamento, volume e stato audio",
+    "resetDefaults": "Ripristina impostazioni predefinite",
+    "information": "Informazioni",
+    "infoText": "Le impostazioni vengono salvate da Chrome e applicate alle registrazioni Webex. L'estensione non raccoglie dati delle registrazioni.",
+    "saved": "Salvato",
+    "defaultsRestored": "Impostazioni predefinite ripristinate",
+    "presetApplied": "{value}s impostati",
+    "overlayVolume": "Volume",
+    "overlayMuted": "Silenzioso",
+    "launcherOpen": "Apri Webex Power Tools"
+  },
+  "es": {
+    "appSubtitle": "Controles avanzados para grabaciones de Webex",
+    "languageSection": "Idioma",
+    "languageSearchLabel": "Buscar idiomas",
+    "languageSearchPlaceholder": "Buscar un idioma…",
+    "languageNoResults": "No se encontraron idiomas",
+    "languageAuto": "Automático",
+    "languageAutoHint": "Idioma del navegador: {language}",
+    "playbackSection": "Reproducción",
+    "playbackHint": "Navegación y velocidad de reproducción",
+    "rewind": "Atrás",
+    "forward": "Adelante",
+    "zonesNote": "Áreas del vídeo: 1/4 izquierdo = atrás · mitad central = Webex/pantalla completa · 1/4 derecho = adelante",
+    "temporarySpeed": "Aceleración temporal",
+    "temporarySpeedHint": "Mantén pulsada la barra espaciadora o el botón izquierdo del ratón para acelerar",
+    "spaceKey": "Barra espaciadora",
+    "spaceKeyHint": "Pulsa para reproducir/pausar · mantén pulsado para acelerar",
+    "mouseSection": "Ratón",
+    "mouseSectionHint": "Controles del vídeo",
+    "mouseHold": "Mantener pulsado el botón izquierdo",
+    "mouseHoldHint": "Acelera la reproducción mientras mantienes pulsado",
+    "lateralDoubleClick": "Doble clic en los laterales",
+    "lateralDoubleClickHint": "1/4 izquierdo = atrás · 1/4 derecho = adelante",
+    "rightClickRewind": "Clic derecho para retroceder",
+    "rightClickRewindHint": "Haz clic derecho en el vídeo para retroceder",
+    "keyboardSection": "Teclado",
+    "keyboardHint": "Atajos de teclado",
+    "volumeArrows": "Flechas ↑ / ↓",
+    "volumeArrowsHint": "↑ sube el volumen · ↓ baja el volumen",
+    "volumeStep": "Incremento de volumen",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = atrás · K = reproducir/pausar · L = adelante",
+    "muteShortcut": "M = Silenciar / Activar sonido",
+    "muteShortcutHint": "Restaura el nivel de volumen anterior al activar el sonido",
+    "interfaceSection": "Interfaz",
+    "interfaceHint": "Indicadores en pantalla",
+    "showOverlays": "Mostrar indicadores en pantalla",
+    "showOverlaysHint": "Muestra velocidad, desplazamiento, volumen y estado de silencio",
+    "resetDefaults": "Restaurar valores predeterminados",
+    "information": "Información",
+    "infoText": "Chrome guarda la configuración y la aplica a las grabaciones de Webex. La extensión no recopila datos de las grabaciones.",
+    "saved": "Guardado",
+    "defaultsRestored": "Valores predeterminados restaurados",
+    "presetApplied": "{value}s configurados",
+    "overlayVolume": "Volumen",
+    "overlayMuted": "Silenciado",
+    "launcherOpen": "Abrir Webex Power Tools"
+  },
+  "de": {
+    "appSubtitle": "Erweiterte Steuerung für Webex-Aufzeichnungen",
+    "languageSection": "Sprache",
+    "languageSearchLabel": "Sprachen suchen",
+    "languageSearchPlaceholder": "Sprache suchen…",
+    "languageNoResults": "Keine Sprachen gefunden",
+    "languageAuto": "Automatisch",
+    "languageAutoHint": "Browsersprache: {language}",
+    "playbackSection": "Wiedergabe",
+    "playbackHint": "Navigation und Wiedergabegeschwindigkeit",
+    "rewind": "Zurück",
+    "forward": "Vor",
+    "zonesNote": "Videobereiche: linkes Viertel = zurück · mittlere Hälfte = Webex/Vollbild · rechtes Viertel = vor",
+    "temporarySpeed": "Temporär beschleunigen",
+    "temporarySpeedHint": "Leertaste oder linke Maustaste gedrückt halten, um zu beschleunigen",
+    "spaceKey": "Leertaste",
+    "spaceKeyHint": "Drücken für Wiedergabe/Pause · gedrückt halten zum Beschleunigen",
+    "mouseSection": "Maus",
+    "mouseSectionHint": "Videosteuerung",
+    "mouseHold": "Linke Maustaste gedrückt halten",
+    "mouseHoldHint": "Beschleunigt die Wiedergabe, solange die Taste gedrückt ist",
+    "lateralDoubleClick": "Doppelklick an den Seiten",
+    "lateralDoubleClickHint": "Linkes Viertel = zurück · rechtes Viertel = vor",
+    "rightClickRewind": "Rechtsklick zum Zurückspringen",
+    "rightClickRewindHint": "Mit Rechtsklick auf das Video zurückspringen",
+    "keyboardSection": "Tastatur",
+    "keyboardHint": "Tastenkürzel",
+    "volumeArrows": "Pfeiltasten ↑ / ↓",
+    "volumeArrowsHint": "↑ lauter · ↓ leiser",
+    "volumeStep": "Lautstärkeschritt",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = zurück · K = Wiedergabe/Pause · L = vor",
+    "muteShortcut": "M = Stumm / Ton an",
+    "muteShortcutHint": "Stellt beim Einschalten des Tons die vorherige Lautstärke wieder her",
+    "interfaceSection": "Oberfläche",
+    "interfaceHint": "Bildschirmanzeigen",
+    "showOverlays": "Bildschirmanzeigen einblenden",
+    "showOverlaysHint": "Zeigt Geschwindigkeit, Sprünge, Lautstärke und Stummschaltung",
+    "resetDefaults": "Standardeinstellungen wiederherstellen",
+    "information": "Informationen",
+    "infoText": "Die Einstellungen werden von Chrome gespeichert und auf Webex-Aufzeichnungen angewendet. Die Erweiterung sammelt keine Aufzeichnungsdaten.",
+    "saved": "Gespeichert",
+    "defaultsRestored": "Standardeinstellungen wiederhergestellt",
+    "presetApplied": "{value}s eingestellt",
+    "overlayVolume": "Lautstärke",
+    "overlayMuted": "Stumm",
+    "launcherOpen": "Webex Power Tools öffnen"
+  },
+  "fr": {
+    "appSubtitle": "Commandes avancées pour les enregistrements Webex",
+    "languageSection": "Langue",
+    "languageSearchLabel": "Rechercher des langues",
+    "languageSearchPlaceholder": "Rechercher une langue…",
+    "languageNoResults": "Aucune langue trouvée",
+    "languageAuto": "Automatique",
+    "languageAutoHint": "Langue du navigateur : {language}",
+    "playbackSection": "Lecture",
+    "playbackHint": "Navigation et vitesse de lecture",
+    "rewind": "Retour",
+    "forward": "Avance",
+    "zonesNote": "Zones vidéo : quart gauche = retour · moitié centrale = Webex/plein écran · quart droit = avance",
+    "temporarySpeed": "Accélération temporaire",
+    "temporarySpeedHint": "Maintenez Espace ou le bouton gauche de la souris pour accélérer",
+    "spaceKey": "Barre d’espace",
+    "spaceKeyHint": "Appuyez pour lecture/pause · maintenez pour accélérer",
+    "mouseSection": "Souris",
+    "mouseSectionHint": "Commandes vidéo",
+    "mouseHold": "Maintenir le bouton gauche",
+    "mouseHoldHint": "Accélère la lecture tant que le bouton est maintenu",
+    "lateralDoubleClick": "Double clic sur les côtés",
+    "lateralDoubleClickHint": "Quart gauche = retour · quart droit = avance",
+    "rightClickRewind": "Clic droit pour revenir en arrière",
+    "rightClickRewindHint": "Faites un clic droit sur la vidéo pour revenir en arrière",
+    "keyboardSection": "Clavier",
+    "keyboardHint": "Raccourcis clavier",
+    "volumeArrows": "Flèches ↑ / ↓",
+    "volumeArrowsHint": "↑ augmente le volume · ↓ diminue le volume",
+    "volumeStep": "Incrément de volume",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = retour · K = lecture/pause · L = avance",
+    "muteShortcut": "M = Couper / Rétablir le son",
+    "muteShortcutHint": "Rétablit le niveau de volume précédent lorsque le son est réactivé",
+    "interfaceSection": "Interface",
+    "interfaceHint": "Indicateurs à l’écran",
+    "showOverlays": "Afficher les indicateurs à l’écran",
+    "showOverlaysHint": "Affiche la vitesse, le déplacement, le volume et l’état du son",
+    "resetDefaults": "Rétablir les paramètres par défaut",
+    "information": "Informations",
+    "infoText": "Les paramètres sont enregistrés par Chrome et appliqués aux enregistrements Webex. L’extension ne collecte aucune donnée d’enregistrement.",
+    "saved": "Enregistré",
+    "defaultsRestored": "Paramètres par défaut rétablis",
+    "presetApplied": "{value}s définies",
+    "overlayVolume": "Volume",
+    "overlayMuted": "Son coupé",
+    "launcherOpen": "Ouvrir Webex Power Tools"
+  },
+  "pt": {
+    "appSubtitle": "Controlos avançados para gravações Webex",
+    "languageSection": "Idioma",
+    "languageSearchLabel": "Pesquisar idiomas",
+    "languageSearchPlaceholder": "Pesquisar um idioma…",
+    "languageNoResults": "Nenhum idioma encontrado",
+    "languageAuto": "Automático",
+    "languageAutoHint": "Idioma do navegador: {language}",
+    "playbackSection": "Reprodução",
+    "playbackHint": "Navegação e velocidade de reprodução",
+    "rewind": "Recuar",
+    "forward": "Avançar",
+    "zonesNote": "Áreas do vídeo: quarto esquerdo = recuar · metade central = Webex/ecrã inteiro · quarto direito = avançar",
+    "temporarySpeed": "Aceleração temporária",
+    "temporarySpeedHint": "Mantenha a barra de espaços ou o botão esquerdo do rato premido para acelerar",
+    "spaceKey": "Barra de espaços",
+    "spaceKeyHint": "Prima para reproduzir/pausar · mantenha premido para acelerar",
+    "mouseSection": "Rato",
+    "mouseSectionHint": "Controlos de vídeo",
+    "mouseHold": "Manter o botão esquerdo premido",
+    "mouseHoldHint": "Acelera a reprodução enquanto mantém premido",
+    "lateralDoubleClick": "Duplo clique nas laterais",
+    "lateralDoubleClickHint": "Quarto esquerdo = recuar · quarto direito = avançar",
+    "rightClickRewind": "Clique direito para recuar",
+    "rightClickRewindHint": "Clique com o botão direito no vídeo para recuar",
+    "keyboardSection": "Teclado",
+    "keyboardHint": "Atalhos de teclado",
+    "volumeArrows": "Setas ↑ / ↓",
+    "volumeArrowsHint": "↑ aumenta o volume · ↓ diminui o volume",
+    "volumeStep": "Incremento de volume",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = recuar · K = reproduzir/pausar · L = avançar",
+    "muteShortcut": "M = Silenciar / Reativar som",
+    "muteShortcutHint": "Repõe o nível de volume anterior ao reativar o som",
+    "interfaceSection": "Interface",
+    "interfaceHint": "Indicadores no ecrã",
+    "showOverlays": "Mostrar indicadores no ecrã",
+    "showOverlaysHint": "Mostra velocidade, navegação, volume e estado do som",
+    "resetDefaults": "Repor predefinições",
+    "information": "Informações",
+    "infoText": "As definições são guardadas pelo Chrome e aplicadas às gravações Webex. A extensão não recolhe dados das gravações.",
+    "saved": "Guardado",
+    "defaultsRestored": "Predefinições repostas",
+    "presetApplied": "{value}s definidos",
+    "overlayVolume": "Volume",
+    "overlayMuted": "Sem som",
+    "launcherOpen": "Abrir Webex Power Tools"
+  },
+  "zh-CN": {
+    "appSubtitle": "Webex 录制内容的增强控制",
+    "languageSection": "语言",
+    "languageSearchLabel": "搜索语言",
+    "languageSearchPlaceholder": "搜索语言…",
+    "languageNoResults": "未找到语言",
+    "languageAuto": "自动",
+    "languageAutoHint": "浏览器语言：{language}",
+    "playbackSection": "播放",
+    "playbackHint": "跳转与播放速度",
+    "rewind": "后退",
+    "forward": "前进",
+    "zonesNote": "视频区域：左侧 1/4 = 后退 · 中间 1/2 = Webex/全屏 · 右侧 1/4 = 前进",
+    "temporarySpeed": "临时加速",
+    "temporarySpeedHint": "按住空格键或鼠标左键可加速播放",
+    "spaceKey": "空格键",
+    "spaceKeyHint": "按一下播放/暂停 · 按住加速",
+    "mouseSection": "鼠标",
+    "mouseSectionHint": "视频控制",
+    "mouseHold": "按住鼠标左键",
+    "mouseHoldHint": "按住时加速播放",
+    "lateralDoubleClick": "双击两侧区域",
+    "lateralDoubleClickHint": "左侧 1/4 = 后退 · 右侧 1/4 = 前进",
+    "rightClickRewind": "右键后退",
+    "rightClickRewindHint": "在视频上单击右键即可后退",
+    "keyboardSection": "键盘",
+    "keyboardHint": "键盘快捷键",
+    "volumeArrows": "方向键 ↑ / ↓",
+    "volumeArrowsHint": "↑ 提高音量 · ↓ 降低音量",
+    "volumeStep": "音量步进",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = 后退 · K = 播放/暂停 · L = 前进",
+    "muteShortcut": "M = 静音 / 取消静音",
+    "muteShortcutHint": "取消静音时恢复之前的音量级别",
+    "interfaceSection": "界面",
+    "interfaceHint": "屏幕提示",
+    "showOverlays": "显示屏幕提示",
+    "showOverlaysHint": "显示速度、跳转、音量和静音状态",
+    "resetDefaults": "恢复默认设置",
+    "information": "信息",
+    "infoText": "设置由 Chrome 保存并应用于 Webex 录制内容。本扩展不会收集录制数据。",
+    "saved": "已保存",
+    "defaultsRestored": "已恢复默认设置",
+    "presetApplied": "已设置为 {value} 秒",
+    "overlayVolume": "音量",
+    "overlayMuted": "已静音",
+    "launcherOpen": "打开 Webex Power Tools"
+  },
+  "zh-TW": {
+    "appSubtitle": "Webex 錄製內容的增強控制",
+    "languageSection": "語言",
+    "languageSearchLabel": "搜尋語言",
+    "languageSearchPlaceholder": "搜尋語言…",
+    "languageNoResults": "找不到語言",
+    "languageAuto": "自動",
+    "languageAutoHint": "瀏覽器語言：{language}",
+    "playbackSection": "播放",
+    "playbackHint": "跳轉與播放速度",
+    "rewind": "後退",
+    "forward": "前進",
+    "zonesNote": "影片區域：左側 1/4 = 後退 · 中間 1/2 = Webex/全螢幕 · 右側 1/4 = 前進",
+    "temporarySpeed": "暫時加速",
+    "temporarySpeedHint": "按住空白鍵或滑鼠左鍵即可加速播放",
+    "spaceKey": "空白鍵",
+    "spaceKeyHint": "按一下播放/暫停 · 按住加速",
+    "mouseSection": "滑鼠",
+    "mouseSectionHint": "影片控制",
+    "mouseHold": "按住滑鼠左鍵",
+    "mouseHoldHint": "按住時加速播放",
+    "lateralDoubleClick": "雙擊兩側區域",
+    "lateralDoubleClickHint": "左側 1/4 = 後退 · 右側 1/4 = 前進",
+    "rightClickRewind": "右鍵後退",
+    "rightClickRewindHint": "在影片上按右鍵即可後退",
+    "keyboardSection": "鍵盤",
+    "keyboardHint": "鍵盤快速鍵",
+    "volumeArrows": "方向鍵 ↑ / ↓",
+    "volumeArrowsHint": "↑ 提高音量 · ↓ 降低音量",
+    "volumeStep": "音量調整幅度",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = 後退 · K = 播放/暫停 · L = 前進",
+    "muteShortcut": "M = 靜音 / 取消靜音",
+    "muteShortcutHint": "取消靜音時恢復先前的音量大小",
+    "interfaceSection": "介面",
+    "interfaceHint": "畫面提示",
+    "showOverlays": "顯示畫面提示",
+    "showOverlaysHint": "顯示速度、跳轉、音量和靜音狀態",
+    "resetDefaults": "還原預設設定",
+    "information": "資訊",
+    "infoText": "設定由 Chrome 儲存並套用至 Webex 錄製內容。本擴充功能不會收集錄製資料。",
+    "saved": "已儲存",
+    "defaultsRestored": "已還原預設設定",
+    "presetApplied": "已設為 {value} 秒",
+    "overlayVolume": "音量",
+    "overlayMuted": "已靜音",
+    "launcherOpen": "開啟 Webex Power Tools"
+  },
+  "ja": {
+    "appSubtitle": "Webex 録画の操作を拡張",
+    "languageSection": "言語",
+    "languageSearchLabel": "言語を検索",
+    "languageSearchPlaceholder": "言語を検索…",
+    "languageNoResults": "言語が見つかりません",
+    "languageAuto": "自動",
+    "languageAutoHint": "ブラウザーの言語：{language}",
+    "playbackSection": "再生",
+    "playbackHint": "シークと再生速度",
+    "rewind": "戻る",
+    "forward": "進む",
+    "zonesNote": "動画領域：左 1/4 = 戻る · 中央 1/2 = Webex/全画面 · 右 1/4 = 進む",
+    "temporarySpeed": "一時的に加速",
+    "temporarySpeedHint": "スペースキーまたはマウス左ボタンを押し続けると加速します",
+    "spaceKey": "スペースキー",
+    "spaceKeyHint": "押すと再生/一時停止 · 長押しで加速",
+    "mouseSection": "マウス",
+    "mouseSectionHint": "動画操作",
+    "mouseHold": "左ボタンを長押し",
+    "mouseHoldHint": "押している間だけ再生を加速",
+    "lateralDoubleClick": "左右端をダブルクリック",
+    "lateralDoubleClickHint": "左 1/4 = 戻る · 右 1/4 = 進む",
+    "rightClickRewind": "右クリックで戻る",
+    "rightClickRewindHint": "動画を右クリックすると設定した時間だけ戻ります",
+    "keyboardSection": "キーボード",
+    "keyboardHint": "キーボードショートカット",
+    "volumeArrows": "↑ / ↓ キー",
+    "volumeArrowsHint": "↑ 音量を上げる · ↓ 音量を下げる",
+    "volumeStep": "音量の増減幅",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = 戻る · K = 再生/一時停止 · L = 進む",
+    "muteShortcut": "M = ミュート / ミュート解除",
+    "muteShortcutHint": "ミュート解除時に直前の音量へ戻します",
+    "interfaceSection": "インターフェース",
+    "interfaceHint": "画面上の表示",
+    "showOverlays": "画面上のインジケーターを表示",
+    "showOverlaysHint": "速度、シーク、音量、ミュート状態を表示",
+    "resetDefaults": "初期設定に戻す",
+    "information": "情報",
+    "infoText": "設定は Chrome に保存され、Webex 録画に適用されます。この拡張機能は録画データを収集しません。",
+    "saved": "保存しました",
+    "defaultsRestored": "初期設定に戻しました",
+    "presetApplied": "{value}秒に設定しました",
+    "overlayVolume": "音量",
+    "overlayMuted": "ミュート",
+    "launcherOpen": "Webex Power Tools を開く"
+  },
+  "ko": {
+    "appSubtitle": "Webex 녹화를 위한 향상된 제어 기능",
+    "languageSection": "언어",
+    "languageSearchLabel": "언어 검색",
+    "languageSearchPlaceholder": "언어 검색…",
+    "languageNoResults": "언어를 찾을 수 없습니다",
+    "languageAuto": "자동",
+    "languageAutoHint": "브라우저 언어: {language}",
+    "playbackSection": "재생",
+    "playbackHint": "탐색 및 재생 속도",
+    "rewind": "뒤로",
+    "forward": "앞으로",
+    "zonesNote": "동영상 영역: 왼쪽 1/4 = 뒤로 · 가운데 1/2 = Webex/전체 화면 · 오른쪽 1/4 = 앞으로",
+    "temporarySpeed": "일시 가속",
+    "temporarySpeedHint": "스페이스바 또는 마우스 왼쪽 버튼을 누르고 있으면 재생 속도가 빨라집니다",
+    "spaceKey": "스페이스바",
+    "spaceKeyHint": "누르면 재생/일시정지 · 길게 누르면 가속",
+    "mouseSection": "마우스",
+    "mouseSectionHint": "동영상 조작",
+    "mouseHold": "왼쪽 버튼 길게 누르기",
+    "mouseHoldHint": "누르고 있는 동안 재생 속도를 높입니다",
+    "lateralDoubleClick": "양쪽 영역 더블 클릭",
+    "lateralDoubleClickHint": "왼쪽 1/4 = 뒤로 · 오른쪽 1/4 = 앞으로",
+    "rightClickRewind": "오른쪽 클릭으로 뒤로 이동",
+    "rightClickRewindHint": "동영상에서 오른쪽 클릭하면 뒤로 이동합니다",
+    "keyboardSection": "키보드",
+    "keyboardHint": "키보드 단축키",
+    "volumeArrows": "방향키 ↑ / ↓",
+    "volumeArrowsHint": "↑ 볼륨 높이기 · ↓ 볼륨 낮추기",
+    "volumeStep": "볼륨 조절 폭",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = 뒤로 · K = 재생/일시정지 · L = 앞으로",
+    "muteShortcut": "M = 음소거 / 음소거 해제",
+    "muteShortcutHint": "음소거를 해제하면 이전 볼륨으로 복원합니다",
+    "interfaceSection": "인터페이스",
+    "interfaceHint": "화면 표시",
+    "showOverlays": "화면 표시기 보기",
+    "showOverlaysHint": "속도, 탐색, 볼륨, 음소거 상태를 표시합니다",
+    "resetDefaults": "기본값 복원",
+    "information": "정보",
+    "infoText": "설정은 Chrome에 저장되어 Webex 녹화에 적용됩니다. 이 확장 프로그램은 녹화 데이터를 수집하지 않습니다.",
+    "saved": "저장됨",
+    "defaultsRestored": "기본값을 복원했습니다",
+    "presetApplied": "{value}초로 설정",
+    "overlayVolume": "볼륨",
+    "overlayMuted": "음소거",
+    "launcherOpen": "Webex Power Tools 열기"
+  },
+  "pl": {
+    "appSubtitle": "Rozszerzone sterowanie nagraniami Webex",
+    "languageSection": "Język",
+    "languageSearchLabel": "Szukaj języków",
+    "languageSearchPlaceholder": "Szukaj języka…",
+    "languageNoResults": "Nie znaleziono języków",
+    "languageAuto": "Automatycznie",
+    "languageAutoHint": "Język przeglądarki: {language}",
+    "playbackSection": "Odtwarzanie",
+    "playbackHint": "Przewijanie i prędkość odtwarzania",
+    "rewind": "Wstecz",
+    "forward": "Dalej",
+    "zonesNote": "Obszary wideo: lewa 1/4 = wstecz · środkowa 1/2 = Webex/pełny ekran · prawa 1/4 = dalej",
+    "temporarySpeed": "Tymczasowe przyspieszenie",
+    "temporarySpeedHint": "Przytrzymaj spację lub lewy przycisk myszy, aby przyspieszyć",
+    "spaceKey": "Spacja",
+    "spaceKeyHint": "Naciśnij, aby odtworzyć/wstrzymać · przytrzymaj, aby przyspieszyć",
+    "mouseSection": "Mysz",
+    "mouseSectionHint": "Sterowanie wideo",
+    "mouseHold": "Przytrzymaj lewy przycisk",
+    "mouseHoldHint": "Przyspiesza odtwarzanie podczas przytrzymania",
+    "lateralDoubleClick": "Dwuklik po bokach",
+    "lateralDoubleClickHint": "Lewa 1/4 = wstecz · prawa 1/4 = dalej",
+    "rightClickRewind": "Prawy klik, aby cofnąć",
+    "rightClickRewindHint": "Kliknij wideo prawym przyciskiem, aby cofnąć",
+    "keyboardSection": "Klawiatura",
+    "keyboardHint": "Skróty klawiaturowe",
+    "volumeArrows": "Strzałki ↑ / ↓",
+    "volumeArrowsHint": "↑ głośniej · ↓ ciszej",
+    "volumeStep": "Krok głośności",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = wstecz · K = odtwórz/wstrzymaj · L = dalej",
+    "muteShortcut": "M = Wycisz / Włącz dźwięk",
+    "muteShortcutHint": "Po włączeniu dźwięku przywraca poprzedni poziom głośności",
+    "interfaceSection": "Interfejs",
+    "interfaceHint": "Wskaźniki ekranowe",
+    "showOverlays": "Pokaż wskaźniki ekranowe",
+    "showOverlaysHint": "Pokazuje prędkość, przewijanie, głośność i wyciszenie",
+    "resetDefaults": "Przywróć ustawienia domyślne",
+    "information": "Informacje",
+    "infoText": "Ustawienia są zapisywane przez Chrome i stosowane do nagrań Webex. Rozszerzenie nie zbiera danych z nagrań.",
+    "saved": "Zapisano",
+    "defaultsRestored": "Przywrócono ustawienia domyślne",
+    "presetApplied": "Ustawiono {value}s",
+    "overlayVolume": "Głośność",
+    "overlayMuted": "Wyciszono",
+    "launcherOpen": "Otwórz Webex Power Tools"
+  },
+  "nl": {
+    "appSubtitle": "Uitgebreide bediening voor Webex-opnamen",
+    "languageSection": "Taal",
+    "languageSearchLabel": "Talen zoeken",
+    "languageSearchPlaceholder": "Zoek een taal…",
+    "languageNoResults": "Geen talen gevonden",
+    "languageAuto": "Automatisch",
+    "languageAutoHint": "Browsertaal: {language}",
+    "playbackSection": "Afspelen",
+    "playbackHint": "Navigeren en afspeelsnelheid",
+    "rewind": "Terug",
+    "forward": "Vooruit",
+    "zonesNote": "Videogebieden: linker kwart = terug · middelste helft = Webex/volledig scherm · rechter kwart = vooruit",
+    "temporarySpeed": "Tijdelijk versnellen",
+    "temporarySpeedHint": "Houd Spatie of de linkermuisknop ingedrukt om te versnellen",
+    "spaceKey": "Spatiebalk",
+    "spaceKeyHint": "Druk voor afspelen/pauzeren · houd ingedrukt om te versnellen",
+    "mouseSection": "Muis",
+    "mouseSectionHint": "Videobediening",
+    "mouseHold": "Linkermuisknop ingedrukt houden",
+    "mouseHoldHint": "Versnelt het afspelen zolang je ingedrukt houdt",
+    "lateralDoubleClick": "Dubbelklik aan de zijkanten",
+    "lateralDoubleClickHint": "Linker kwart = terug · rechter kwart = vooruit",
+    "rightClickRewind": "Rechtsklik om terug te gaan",
+    "rightClickRewindHint": "Klik met rechts op de video om terug te gaan",
+    "keyboardSection": "Toetsenbord",
+    "keyboardHint": "Sneltoetsen",
+    "volumeArrows": "Pijltjestoetsen ↑ / ↓",
+    "volumeArrowsHint": "↑ harder · ↓ zachter",
+    "volumeStep": "Volumestap",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = terug · K = afspelen/pauzeren · L = vooruit",
+    "muteShortcut": "M = Dempen / Geluid aan",
+    "muteShortcutHint": "Herstelt het vorige volumeniveau wanneer het geluid weer wordt ingeschakeld",
+    "interfaceSection": "Interface",
+    "interfaceHint": "Schermindicatoren",
+    "showOverlays": "Schermindicatoren tonen",
+    "showOverlaysHint": "Toont snelheid, navigatie, volume en dempstatus",
+    "resetDefaults": "Standaardinstellingen herstellen",
+    "information": "Informatie",
+    "infoText": "Instellingen worden door Chrome opgeslagen en toegepast op Webex-opnamen. De extensie verzamelt geen opnamegegevens.",
+    "saved": "Opgeslagen",
+    "defaultsRestored": "Standaardinstellingen hersteld",
+    "presetApplied": "{value}s ingesteld",
+    "overlayVolume": "Volume",
+    "overlayMuted": "Gedempt",
+    "launcherOpen": "Webex Power Tools openen"
+  },
+  "ar": {
+    "appSubtitle": "عناصر تحكم محسّنة لتسجيلات Webex",
+    "languageSection": "اللغة",
+    "languageSearchLabel": "البحث عن اللغات",
+    "languageSearchPlaceholder": "ابحث عن لغة…",
+    "languageNoResults": "لم يتم العثور على لغات",
+    "languageAuto": "تلقائي",
+    "languageAutoHint": "لغة المتصفح: {language}",
+    "playbackSection": "التشغيل",
+    "playbackHint": "التنقل وسرعة التشغيل",
+    "rewind": "للخلف",
+    "forward": "للأمام",
+    "zonesNote": "مناطق الفيديو: الربع الأيسر = للخلف · النصف الأوسط = Webex/ملء الشاشة · الربع الأيمن = للأمام",
+    "temporarySpeed": "تسريع مؤقت",
+    "temporarySpeedHint": "اضغط مطولًا على مفتاح المسافة أو زر الفأرة الأيسر للتسريع",
+    "spaceKey": "مفتاح المسافة",
+    "spaceKeyHint": "اضغط للتشغيل/الإيقاف المؤقت · اضغط مطولًا للتسريع",
+    "mouseSection": "الفأرة",
+    "mouseSectionHint": "عناصر تحكم الفيديو",
+    "mouseHold": "اضغط مطولًا على الزر الأيسر",
+    "mouseHoldHint": "يسرّع التشغيل ما دمت ضاغطًا",
+    "lateralDoubleClick": "نقر مزدوج على الجانبين",
+    "lateralDoubleClickHint": "الربع الأيسر = للخلف · الربع الأيمن = للأمام",
+    "rightClickRewind": "النقر بالزر الأيمن للرجوع",
+    "rightClickRewindHint": "انقر بزر الفأرة الأيمن على الفيديو للرجوع",
+    "keyboardSection": "لوحة المفاتيح",
+    "keyboardHint": "اختصارات لوحة المفاتيح",
+    "volumeArrows": "السهمان ↑ / ↓",
+    "volumeArrowsHint": "↑ لرفع الصوت · ↓ لخفض الصوت",
+    "volumeStep": "مقدار تغيير الصوت",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = للخلف · K = تشغيل/إيقاف مؤقت · L = للأمام",
+    "muteShortcut": "M = كتم / إلغاء الكتم",
+    "muteShortcutHint": "يستعيد مستوى الصوت السابق عند إلغاء الكتم",
+    "interfaceSection": "الواجهة",
+    "interfaceHint": "مؤشرات على الشاشة",
+    "showOverlays": "إظهار مؤشرات على الشاشة",
+    "showOverlaysHint": "إظهار السرعة والتنقل ومستوى الصوت وحالة الكتم",
+    "resetDefaults": "استعادة الإعدادات الافتراضية",
+    "information": "معلومات",
+    "infoText": "يحفظ Chrome الإعدادات ويطبقها على تسجيلات Webex. لا تجمع الإضافة بيانات التسجيلات.",
+    "saved": "تم الحفظ",
+    "defaultsRestored": "تمت استعادة الإعدادات الافتراضية",
+    "presetApplied": "تم الضبط على {value} ث",
+    "overlayVolume": "مستوى الصوت",
+    "overlayMuted": "مكتوم",
+    "launcherOpen": "فتح Webex Power Tools"
+  },
+  "ru": {
+    "appSubtitle": "Расширенное управление записями Webex",
+    "languageSection": "Язык",
+    "languageSearchLabel": "Поиск языков",
+    "languageSearchPlaceholder": "Найти язык…",
+    "languageNoResults": "Языки не найдены",
+    "languageAuto": "Автоматически",
+    "languageAutoHint": "Язык браузера: {language}",
+    "playbackSection": "Воспроизведение",
+    "playbackHint": "Навигация и скорость воспроизведения",
+    "rewind": "Назад",
+    "forward": "Вперёд",
+    "zonesNote": "Области видео: левая четверть = назад · центральная половина = Webex/полный экран · правая четверть = вперёд",
+    "temporarySpeed": "Временное ускорение",
+    "temporarySpeedHint": "Удерживайте пробел или левую кнопку мыши, чтобы ускорить воспроизведение",
+    "spaceKey": "Пробел",
+    "spaceKeyHint": "Нажмите для воспроизведения/паузы · удерживайте для ускорения",
+    "mouseSection": "Мышь",
+    "mouseSectionHint": "Управление видео",
+    "mouseHold": "Удерживать левую кнопку",
+    "mouseHoldHint": "Ускоряет воспроизведение, пока кнопка удерживается",
+    "lateralDoubleClick": "Двойной щелчок по краям",
+    "lateralDoubleClickHint": "Левая четверть = назад · правая четверть = вперёд",
+    "rightClickRewind": "Правый клик для перехода назад",
+    "rightClickRewindHint": "Щёлкните видео правой кнопкой, чтобы перейти назад",
+    "keyboardSection": "Клавиатура",
+    "keyboardHint": "Горячие клавиши",
+    "volumeArrows": "Стрелки ↑ / ↓",
+    "volumeArrowsHint": "↑ громче · ↓ тише",
+    "volumeStep": "Шаг громкости",
+    "jklShortcuts": "J / K / L",
+    "jklShortcutsHint": "J = назад · K = воспроизведение/пауза · L = вперёд",
+    "muteShortcut": "M = Выключить / Включить звук",
+    "muteShortcutHint": "При включении звука восстанавливает предыдущий уровень громкости",
+    "interfaceSection": "Интерфейс",
+    "interfaceHint": "Экранные индикаторы",
+    "showOverlays": "Показывать экранные индикаторы",
+    "showOverlaysHint": "Показывает скорость, навигацию, громкость и состояние звука",
+    "resetDefaults": "Восстановить настройки по умолчанию",
+    "information": "Информация",
+    "infoText": "Настройки сохраняются Chrome и применяются к записям Webex. Расширение не собирает данные записей.",
+    "saved": "Сохранено",
+    "defaultsRestored": "Настройки по умолчанию восстановлены",
+    "presetApplied": "Установлено: {value} с",
+    "overlayVolume": "Громкость",
+    "overlayMuted": "Без звука",
+    "launcherOpen": "Открыть Webex Power Tools"
+  }
+};
+  const languages = [
+  {
+    "code": "it",
+    "flagAsset": "flags/it.svg",
+    "nativeName": "Italiano",
+    "englishName": "Italian",
+    "dir": "ltr",
+    "aliases": [
+      "italia",
+      "italy"
+    ]
+  },
+  {
+    "code": "en",
+    "flagAsset": "flags/en.svg",
+    "nativeName": "English",
+    "englishName": "English",
+    "dir": "ltr",
+    "aliases": [
+      "inglese",
+      "english"
+    ]
+  },
+  {
+    "code": "es",
+    "flagAsset": "flags/es.svg",
+    "nativeName": "Español",
+    "englishName": "Spanish",
+    "dir": "ltr",
+    "aliases": [
+      "spanish",
+      "espanol",
+      "español"
+    ]
+  },
+  {
+    "code": "de",
+    "flagAsset": "flags/de.svg",
+    "nativeName": "Deutsch",
+    "englishName": "German",
+    "dir": "ltr",
+    "aliases": [
+      "german",
+      "tedesco"
+    ]
+  },
+  {
+    "code": "fr",
+    "flagAsset": "flags/fr.svg",
+    "nativeName": "Français",
+    "englishName": "French",
+    "dir": "ltr",
+    "aliases": [
+      "francais",
+      "french",
+      "francese"
+    ]
+  },
+  {
+    "code": "pt",
+    "flagAsset": "flags/pt.svg",
+    "nativeName": "Português",
+    "englishName": "Portuguese",
+    "dir": "ltr",
+    "aliases": [
+      "portugues",
+      "portuguese",
+      "portoghese"
+    ]
+  },
+  {
+    "code": "zh-CN",
+    "flagAsset": "flags/zh-CN.svg",
+    "nativeName": "简体中文",
+    "englishName": "Chinese (Simplified)",
+    "dir": "ltr",
+    "aliases": [
+      "chinese",
+      "simplified chinese",
+      "cinese",
+      "zh cn",
+      "mandarin"
+    ]
+  },
+  {
+    "code": "zh-TW",
+    "flagAsset": "flags/zh-TW.svg",
+    "nativeName": "繁體中文",
+    "englishName": "Chinese (Traditional)",
+    "dir": "ltr",
+    "aliases": [
+      "traditional chinese",
+      "chinese traditional",
+      "zh tw",
+      "taiwan"
+    ]
+  },
+  {
+    "code": "ja",
+    "flagAsset": "flags/ja.svg",
+    "nativeName": "日本語",
+    "englishName": "Japanese",
+    "dir": "ltr",
+    "aliases": [
+      "japanese",
+      "giapponese"
+    ]
+  },
+  {
+    "code": "ko",
+    "flagAsset": "flags/ko.svg",
+    "nativeName": "한국어",
+    "englishName": "Korean",
+    "dir": "ltr",
+    "aliases": [
+      "korean",
+      "coreano"
+    ]
+  },
+  {
+    "code": "pl",
+    "flagAsset": "flags/pl.svg",
+    "nativeName": "Polski",
+    "englishName": "Polish",
+    "dir": "ltr",
+    "aliases": [
+      "polish",
+      "polacco"
+    ]
+  },
+  {
+    "code": "nl",
+    "flagAsset": "flags/nl.svg",
+    "nativeName": "Nederlands",
+    "englishName": "Dutch",
+    "dir": "ltr",
+    "aliases": [
+      "dutch",
+      "olandese"
+    ]
+  },
+  {
+    "code": "ar",
+    "flagAsset": "flags/ar.svg",
+    "nativeName": "العربية",
+    "englishName": "Arabic",
+    "dir": "rtl",
+    "aliases": [
+      "arabic",
+      "arabo"
+    ]
+  },
+  {
+    "code": "ru",
+    "flagAsset": "flags/ru.svg",
+    "nativeName": "Русский",
+    "englishName": "Russian",
+    "dir": "ltr",
+    "aliases": [
+      "russian",
+      "russo"
+    ]
+  }
+];
+
+  const byCode = new Map(languages.map((entry) => [entry.code.toLowerCase(), entry]));
+  const supported = new Set(languages.map((entry) => entry.code));
+
+  function browserLanguage() {
+    try {
+      const value = chrome?.i18n?.getUILanguage?.();
+      if (value) return value;
+    } catch (_) {}
+
+    return navigator.language || "en";
+  }
+
+  // Map regional browser tags to supported dictionaries, including Chinese scripts.
+  function canonicalizeLanguage(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+
+    const lower = raw.toLowerCase().replace("_", "-");
+    const exact = byCode.get(lower);
+    if (exact) return exact.code;
+
+    if (lower.startsWith("zh")) {
+      if (
+        lower.includes("hant") ||
+        lower.includes("-tw") ||
+        lower.includes("-hk") ||
+        lower.includes("-mo")
+      ) {
+        return "zh-TW";
+      }
+      return "zh-CN";
+    }
+
+    const base = lower.split("-")[0];
+    const baseEntry = byCode.get(base);
+    return baseEntry?.code || null;
+  }
+
+  function resolveLanguage(setting = "auto") {
+    if (setting && setting !== "auto") {
+      const explicit = canonicalizeLanguage(setting);
+      if (explicit && supported.has(explicit)) return explicit;
+    }
+
+    const detected = canonicalizeLanguage(browserLanguage());
+    return detected && supported.has(detected) ? detected : "en";
+  }
+
+  function getLanguageMeta(code) {
+    const canonical = canonicalizeLanguage(code) || "en";
+    return languages.find((entry) => entry.code === canonical) ||
+      languages.find((entry) => entry.code === "en");
+  }
+
+  // Accent-insensitive matching allows searches such as "francais".
+  function normalizeSearch(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  function languageSearchText(entry) {
+    return normalizeSearch([
+      entry.code,
+      entry.nativeName,
+      entry.englishName,
+      ...(entry.aliases || [])
+    ].join(" "));
+  }
+
+  function createTranslator(setting = "auto") {
+    let currentSetting = setting;
+    let currentLanguage = resolveLanguage(setting);
+
+    return {
+      get language() {
+        return currentLanguage;
+      },
+
+      get setting() {
+        return currentSetting;
+      },
+
+      get direction() {
+        return getLanguageMeta(currentLanguage)?.dir || "ltr";
+      },
+
+      setLanguage(nextSetting = "auto") {
+        currentSetting = nextSetting;
+        currentLanguage = resolveLanguage(nextSetting);
+        return currentLanguage;
+      },
+
+      t(key, vars = {}) {
+        const table = messages[currentLanguage] || messages.en;
+        let value = table[key] ?? messages.en[key] ?? key;
+
+        for (const [name, replacement] of Object.entries(vars)) {
+          value = value.replaceAll(`{${name}}`, String(replacement));
+        }
+
+        return value;
+      }
+    };
+  }
+
+  globalThis.WPT_I18N = Object.freeze({
+    messages,
+    languages,
+    browserLanguage,
+    canonicalizeLanguage,
+    resolveLanguage,
+    getLanguageMeta,
+    normalizeSearch,
+    languageSearchText,
+    createTranslator
+  });
+})();

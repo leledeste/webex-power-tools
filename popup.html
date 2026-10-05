@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webex Power Tools</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="app-shell">
+    <!-- Version labels are refreshed from manifest.json by popup.js. -->
+    <header class="app-header">
+      <div class="brand">
+        <img src="icon48.png" alt="" class="logo">
+        <div class="brand-copy">
+          <div class="title-line">
+            <h1>Webex Power Tools</h1>
+            <span class="version" data-extension-version>v1.0</span>
+          </div>
+          <p data-i18n="appSubtitle">Advanced controls for Webex recordings</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="settings-card language-card">
+      <!-- Translations are inserted as text; the language picker supports RTL. -->
+      <div class="section-heading">
+        <div>
+          <h2 data-i18n="languageSection">Language</h2>
+        </div>
+      </div>
+
+      <div class="language-picker" id="languagePicker">
+        <button
+          type="button"
+          id="languagePickerButton"
+          class="language-picker-button"
+          aria-haspopup="listbox"
+          aria-controls="languageList"
+          aria-expanded="false"
+        >
+          <img id="currentLanguageFlag" class="language-flag-img" src="flags/auto.svg" alt="">
+          <span class="language-current-copy">
+            <strong id="currentLanguageName">Automatic</strong>
+            <small id="currentLanguageHint"></small>
+          </span>
+          <svg class="picker-chevron" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.5 7.5 10 12l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div id="languageMenu" class="language-menu" hidden>
+          <div class="language-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              id="languageSearch"
+              type="search"
+              autocomplete="off"
+              spellcheck="false"
+              data-i18n-placeholder="languageSearchPlaceholder"
+              aria-label="Search languages"
+            >
+          </div>
+          <div id="languageList" class="language-list" role="listbox"></div>
+          <p id="languageNoResults" class="language-empty" data-i18n="languageNoResults" hidden>
+            No languages found
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <div class="section-heading">
+        <div>
+          <h2 data-i18n="playbackSection">Playback</h2>
+          <p data-i18n="playbackHint">Seek and temporary speed</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">▶</span>
+      </div>
+
+      <div class="seek-grid">
+        <label class="field">
+          <span data-i18n="rewind">Back</span>
+          <div class="unit-input">
+            <input id="rewindSeconds" type="number" min="1" max="120" step="1" inputmode="numeric">
+            <span>s</span>
+          </div>
+        </label>
+
+        <label class="field">
+          <span data-i18n="forward">Forward</span>
+          <div class="unit-input">
+            <input id="forwardSeconds" type="number" min="1" max="120" step="1" inputmode="numeric">
+            <span>s</span>
+          </div>
+        </label>
+      </div>
+
+      <div class="preset-row" aria-label="Quick values">
+        <button type="button" data-preset="5">5s</button>
+        <button type="button" data-preset="10">10s</button>
+        <button type="button" data-preset="15">15s</button>
+        <button type="button" data-preset="30">30s</button>
+      </div>
+
+      <p class="zone-note" data-i18n="zonesNote">
+        Player zones: left 1/4 = back · center 1/2 = Webex/fullscreen · right 1/4 = forward
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="inline-setting">
+        <div>
+          <strong id="fastRateLabel" data-i18n="temporarySpeed">Temporary speed</strong>
+          <small data-i18n="temporarySpeedHint">Hold Space or the mouse</small>
+        </div>
+        <select id="fastRate" class="compact-select" aria-label="Temporary speed" aria-labelledby="fastRateLabel">
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="1.75">1.75×</option>
+          <option value="2">2×</option>
+          <option value="2.5">2.5×</option>
+          <option value="3">3×</option>
+          <option value="4">4×</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-spaceKey" data-i18n="spaceKey">Space key</strong>
+            <small data-i18n="spaceKeyHint">Hold for temporary speed; tap for play/pause</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="spaceHoldEnabled" type="checkbox" aria-labelledby="label-spaceKey">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <div class="section-heading">
+        <div>
+          <h2 data-i18n="mouseSection">Mouse</h2>
+          <p data-i18n="mouseSectionHint">Video gestures</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">◫</span>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-mouseHold" data-i18n="mouseHold">Hold left click</strong>
+            <small data-i18n="mouseHoldHint">Temporary speed while the button is held</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="mouseHoldEnabled" type="checkbox" aria-labelledby="label-mouseHold">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-lateralDoubleClick" data-i18n="lateralDoubleClick">Double-click sides</strong>
+            <small data-i18n="lateralDoubleClickHint">Left 1/4 = back · right 1/4 = forward</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="doubleClickEnabled" type="checkbox" aria-labelledby="label-lateralDoubleClick">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-rightClickRewind" data-i18n="rightClickRewind">Right click to go back</strong>
+            <small data-i18n="rightClickRewindHint">One right click on the video seeks backward</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="rightClickRewindEnabled" type="checkbox" aria-labelledby="label-rightClickRewind">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <div class="section-heading">
+        <div>
+          <h2 data-i18n="keyboardSection">Keyboard</h2>
+          <p data-i18n="keyboardHint">Optional shortcuts</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">⌨</span>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-volumeArrows" data-i18n="volumeArrows">Up / Down arrows</strong>
+            <small data-i18n="volumeArrowsHint">↑ raises volume · ↓ lowers it</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="volumeKeysEnabled" type="checkbox" aria-labelledby="label-volumeArrows">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="inline-setting nested-setting">
+        <div>
+          <strong id="volumeStepLabel" data-i18n="volumeStep">Volume step</strong>
+        </div>
+        <div class="unit-input compact-unit">
+          <input id="volumeStep" aria-labelledby="volumeStepLabel" type="number" min="1" max="25" step="1" inputmode="numeric">
+          <span>%</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-jklShortcuts" data-i18n="jklShortcuts">J / K / L</strong>
+            <small data-i18n="jklShortcutsHint">J = back · K = play/pause · L = forward</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="jklEnabled" type="checkbox" aria-labelledby="label-jklShortcuts">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-muteShortcut" data-i18n="muteShortcut">M = Mute / Unmute</strong>
+            <small data-i18n="muteShortcutHint">Restores the previous volume level when unmuted</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="muteKeyEnabled" type="checkbox" aria-labelledby="label-muteShortcut">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <div class="section-heading">
+        <div>
+          <h2 data-i18n="interfaceSection">Interface</h2>
+          <p data-i18n="interfaceHint">Visual feedback</p>
+        </div>
+        <span class="section-icon" aria-hidden="true">◉</span>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-main">
+          <div>
+            <strong id="label-showOverlays" data-i18n="showOverlays">Show action overlays</strong>
+            <small data-i18n="showOverlaysHint">Speed, seek, volume and mute feedback</small>
+          </div>
+        </div>
+        <label class="switch">
+          <input id="overlaysEnabled" type="checkbox" aria-labelledby="label-showOverlays">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <footer class="footer-actions">
+      <button type="button" id="resetButton" class="footer-button">
+        <span aria-hidden="true">↻</span>
+        <span data-i18n="resetDefaults">Restore defaults</span>
+      </button>
+
+      <button type="button" id="infoButton" class="footer-button" aria-expanded="false" aria-controls="infoPanel">
+        <span aria-hidden="true">ⓘ</span>
+        <span data-i18n="information">Information</span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
+
+      <div id="infoPanel" class="info-panel" hidden>
+        <strong>Webex Power Tools <span data-extension-version>v1.0</span></strong>
+        <p data-i18n="infoText">
+          Settings are stored by Chrome and applied to Webex recordings. The extension does not collect recording data.
+        </p>
+      </div>
+    </footer>
+
+    <p id="status" class="status" aria-live="polite"></p>
+  </main>
+
+  <!-- Shared modules must load before the popup controller. -->
+  <script src="settings.js"></script>
+  <script src="i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
