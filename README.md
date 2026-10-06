@@ -8,7 +8,7 @@ Hold to speed up, skip with mouse gestures, and control playback and audio with 
 
 **Version 1.0** · Chrome 127+ · Manifest V3 · No build step
 
-[Download v1.0.0][github-release] · [Chrome Web Store — listing coming soon][chrome-web-store] · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPMENT.md) · [Privacy](docs/PRIVACY.md)
+[Download v1.0.0][github-release] · [Chrome Web Store][chrome-web-store] · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPMENT.md) · [Privacy](docs/PRIVACY.md)
 
 > The store link currently opens the Chrome Web Store homepage. Replace the `chrome-web-store` reference at the bottom of this file with the extension's listing URL once available. Until then, install locally using the steps below.
 
@@ -101,5 +101,5 @@ Webex Power Tools is an independent project and is not affiliated with or endors
 
 Released under the [MIT License](LICENSE).
 
-[chrome-web-store]: https://chromewebstore.google.com/
+[chrome-web-store]: https://chromewebstore.google.com/detail/webex-power-tools/bihikhjjclgaohmddmajcmlhkhjdjgel
 [github-release]: https://github.com/leledeste/webex-power-tools/releases/tag/v1.0.0
