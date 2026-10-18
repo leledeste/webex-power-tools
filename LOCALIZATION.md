@@ -43,7 +43,7 @@ Traditional Chinese, Japanese, Korean, Polish, Dutch, Arabic and Russian.
 
 `i18n.js` contains English source strings, translations, and language metadata.
 `flags/` contains referenced flags and the Automatic icon. English documentation
-and visuals describe version 1.0; the interface retains all supported languages.
+and visuals describe version 1.1; the interface retains all supported languages.
 
 To add a language:
 
@@ -55,8 +55,9 @@ To add a language:
 
 Browser regional tags map to supported dictionaries. Traditional Chinese includes
 Hant, Taiwan, Hong Kong, and Macau tags; other Chinese variants use Simplified.
-Other languages use their base code. Missing keys fall back to English; unexpected
-storage errors are currently shown in English.
+Other languages use their base code. Missing keys fall back to English. Settings
+save/load/reset messages are translated; technical details returned by Chrome
+are displayed as supplied by the browser.
 
 Translations are inserted as text, never HTML. Search ignores Latin diacritics
 and matches native names, English names, codes, and aliases. Arabic direction

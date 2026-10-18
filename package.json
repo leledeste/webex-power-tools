@@ -1,6 +1,6 @@
 {
   "name": "webex-power-tools",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "license": "MIT",
   "description": "Development checks for the Webex Power Tools Chrome extension.",

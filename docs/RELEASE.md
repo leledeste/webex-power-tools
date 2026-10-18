@@ -1,4 +1,4 @@
-# Version 1.0 release checklist
+# Version 1.1 release checklist
 
 ## Manual validation
 
@@ -23,20 +23,20 @@ Fixtures cannot establish compatibility with every Webex player. Complete live c
 npm run package
 ```
 
-Zip the **contents** of `dist/webex-power-tools-1.0.0/`, with `manifest.json` at the archive root. The MIT license notice is included. Tests, documentation, screenshots, and dependencies are excluded. Review store disclosures against the runtime and provide an accessible privacy-policy URL as required by the publishing workflow.
+Zip the **contents** of `dist/webex-power-tools-1.1.0/`, with `manifest.json` at the archive root. The MIT license notice is included. Tests, documentation, screenshots, and dependencies are excluded. Review store disclosures against the runtime and provide an accessible privacy-policy URL as required by the publishing workflow.
 
-## Replace the store placeholder
+## Store listing and submission
 
-In `README.md`, replace this reference with the actual extension listing URL:
+The README links to the existing listing:
 
 ```markdown
-[chrome-web-store]: https://chromewebstore.google.com/
+[chrome-web-store]: https://chromewebstore.google.com/detail/webex-power-tools/bihikhjjclgaohmddmajcmlhkhjdjgel
 ```
 
-Change **Chrome Web Store — listing coming soon** to **Install from the Chrome Web Store** and remove the placeholder notice. The homepage is not a published extension listing; no extension ID has been invented.
+Version 1.1.0 includes the custom-speed changes confirmed by the user on a live recording. Upload its complete runtime ZIP to the existing item's Package tab and submit the update for review. Keep the existing item ID and distribution settings. Loading the local folder unpacked does not update the store listing. Record the dashboard submission status separately from the GitHub release status.
 
 ## Versions and images
 
-Manifest/package versions are `1.0.0`; UI labels are `v1.0`. Update the changelog and documentation for future releases and regenerate images after UI/version changes.
+Manifest/package versions are `1.1.0`; UI labels are `v1.1`. Update the changelog and documentation for future releases and regenerate images after UI/version changes.
 
 `docs/images/overview.png` combines an illustrative player and the English popup. `docs/images/settings.png` shows the entire settings page. Review store-specific image dimensions and requirements when preparing a submission.

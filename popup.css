@@ -181,7 +181,6 @@ h1 {
 
 .language-picker-button:focus-visible,
 input:focus-visible,
-select:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
@@ -382,10 +381,26 @@ select {
   color: var(--text);
 }
 
-input[type="number"]:focus,
-select:focus {
+input[type="number"]:focus {
   border-color: var(--cyan);
   box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* A single quiet keyboard cue replaces the stacked select outline/glow. */
+select:focus {
+  border-color: #45617d;
+  box-shadow: none;
+}
+
+select:focus-visible {
+  border-color: #7c9ab8;
+  outline: none;
+}
+
+select:open {
+  border-color: #45617d;
+  outline: none;
+  box-shadow: none;
 }
 
 .preset-row {
@@ -470,6 +485,12 @@ select:focus {
 .setting-row + .setting-row,
 .inline-setting + .setting-row,
 .setting-row + .inline-setting {
+  border-top: 1px solid rgba(38,55,73,.72);
+}
+
+/* Separate the Space row's divider from the select, including with Custom hidden. */
+.space-key-row {
+  margin-top: 12px;
   border-top: 1px solid rgba(38,55,73,.72);
 }
 
@@ -592,6 +613,45 @@ select:focus {
 .info-panel p {
   margin: 5px 0 0;
   color: var(--muted);
+}
+
+.custom-rate-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.custom-rate-editor button {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--field);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.custom-hold-editor {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.custom-rate-editor button:hover {
+  border-color: var(--cyan);
+}
+
+.custom-rate-editor button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.custom-speed-status {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.custom-speed-status:empty {
+  display: none;
 }
 
 .status {

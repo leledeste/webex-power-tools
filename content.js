@@ -10,6 +10,7 @@
   const SINGLE_CLICK_DELAY_MS = 280;
   const SEEK_CLICK_SEQUENCE_MS = 850;
   const SEEK_OVERLAY_RESET_MS = 850;
+  const VIDEO_SURFACE_SELECTOR = ".video-js, .wxp-video-wrapper, .vjs-tech, .vjs-poster, wxp-interaction-tips";
 
   const { DEFAULTS, MIN_VOLUME_STEP, MAX_VOLUME_STEP } = globalThis.WPT_SETTINGS;
 
@@ -28,13 +29,20 @@
   let mouseTimer = null;
   let mouseHoldActivated = false;
   let suppressNextClick = false;
+  let mouseHoldClickState = null;
   let pendingSingleClickTimer = null;
+  const clickSnapshots = new WeakMap();
+  const bubbledPointerDown = new WeakSet();
+  const capturedVideoGestures = new WeakSet();
+  let nativeSideTap = null;
+  let nativePointerSequence = false;
   // A double-click starts seeking; every extra click on that side extends it.
   let seekClickSequence = null;
   let seekClickSequenceTimer = null;
 
   // One snapshot is shared by overlapping mouse and Space holds.
   const originalRates = new Map();
+  const expectedRates = new WeakMap();
   let holdPrimaryMedia = null;
   let holdStartedPaused = false;
   let muteSnapshot = null;
@@ -54,6 +62,9 @@
 
   const LAUNCHER_ID = "webex-power-tools-launcher";
   let launcherCheckTimer = null;
+  let rateLabelFrame = null;
+  let rateLabelScope = null;
+  let rateLabelObserver = null;
 
   function normalizeSettings(raw) {
     Object.assign(settings, globalThis.WPT_SETTINGS.normalize(raw));
@@ -135,23 +146,80 @@
     ));
   }
 
-  function isInteractiveControl(target) {
-    if (!(target instanceof Element)) return false;
-
-    return Boolean(target.closest([
+  function isInteractiveControl(event) {
+    // closest() cannot cross a shadow root: inspect the full composed path.
+    const selector = [
       "button",
       "a",
       "input",
       "textarea",
       "select",
+      "label",
+      "summary",
+      "menu",
+      "wxp-playback-rate-control",
+      ".wxp-control-button",
+      ".wxp-popover",
+      ".vjs-control-bar",
+      ".vjs-control",
+      ".vjs-menu",
+      ".vjs-popover",
       "[role='button']",
       "[role='slider']",
+      "[role='menu']",
+      "[role='menubar']",
       "[role='menuitem']",
+      "[role='menuitemradio']",
+      "[role='menuitemcheckbox']",
+      "[role='listbox']",
+      "[role='option']",
+      "[role='combobox']",
+      "[role='dialog']",
       "[role='checkbox']",
       "[role='radio']",
+      "[role='textbox']",
       "[contenteditable='true']",
       "[contenteditable='']"
-    ].join(",")));
+    ].join(",");
+    return (event.composedPath?.() || [event.target]).some(node => {
+      if (!(node instanceof Element)) return false;
+      if (node.matches(selector)) return true;
+      // Focusable menu entries sometimes lack roles; focusable player wrappers
+      // containing media must remain eligible for video gestures.
+      return node.matches("[tabindex]:not([tabindex='-1'])") &&
+        !(node instanceof HTMLMediaElement) && !node.querySelector("video, audio") &&
+        !node.shadowRoot?.querySelector("video, audio");
+    });
+  }
+
+  function isMediaSurfaceEvent(event, media) {
+    if (!media || isInteractiveControl(event) || !pointInsideElement(event.clientX, event.clientY, media)) return false;
+    const target = event.composedPath?.()[0] || event.target;
+    if (!(target instanceof Element)) return false;
+    if (target === media || target.contains(media)) return true;
+
+    // Webex can put a transparent gesture layer above the video. Accept a
+    // shared-player layer covering the video, not smaller menus/control bars.
+    const surface = target.getBoundingClientRect();
+    const video = media.getBoundingClientRect();
+    const tolerance = 8;
+    if (Math.abs(surface.left - video.left) > tolerance ||
+        Math.abs(surface.top - video.top) > tolerance ||
+        Math.abs(surface.right - video.right) > tolerance ||
+        Math.abs(surface.bottom - video.bottom) > tolerance) return false;
+    for (let parent = target.parentElement; parent && parent !== document.body && parent !== document.documentElement; parent = parent.parentElement) {
+      if (parent.contains(media)) return true;
+    }
+    return false;
+  }
+
+  function isKnownVideoSurface(event, media) {
+    if (!isMediaSurfaceEvent(event, media)) return false;
+    const target = event.composedPath?.()[0] || event.target;
+    // Capture only exposed playback surfaces. Browser-native controls can
+    // retarget their own events to a video with controls=true: leave those alone.
+    if (target === media) return !media.controls;
+    return !target.shadowRoot && target.matches(VIDEO_SURFACE_SELECTOR);
   }
 
   function scheduleAudioOverlayRefresh() {
@@ -183,6 +251,13 @@
     }, { passive: true });
 
     media.addEventListener("ratechange", () => {
+      // Native Webex changes during a hold become the new rate to restore.
+      // Keep matching expected values: several queued self-events may follow.
+      if (originalRates.has(media) && media.playbackRate !== expectedRates.get(media)) {
+        originalRates.set(media, media.playbackRate);
+        writePlaybackRate(media, Math.max(media.playbackRate, settings.fastRate));
+      }
+      scheduleNativeRateLabel();
       if (!speedBadge?.isConnected) return;
       if (media !== holdPrimaryMedia && !originalRates.has(media)) return;
 
@@ -271,6 +346,89 @@
     const active = related.filter((media) => !media.paused && !media.ended);
     return active.length ? active : (related.length ? related : [primary]);
   }
+
+  function writePlaybackRate(media, rate) {
+    expectedRates.set(media, rate);
+    media.playbackRate = rate;
+    scheduleNativeRateLabel();
+  }
+
+  function nativePlayerScope(media) {
+    // Wxp controls can sit outside the inner Video.js element. Prefer the
+    // outer Webex player and never rewrite labels belonging to other players.
+    let node = media;
+    let legacy = null;
+    while (node instanceof Element) {
+      const webex = node.closest("wxp-player, .wxp-player");
+      if (webex) return webex;
+      legacy ||= node.closest(".video-js");
+      node = node.getRootNode()?.host;
+    }
+    return legacy;
+  }
+
+  function scheduleNativeRateLabel() {
+    if (rateLabelFrame !== null) return;
+    rateLabelFrame = requestAnimationFrame(() => {
+      rateLabelFrame = null;
+      const media = getPrimaryMedia();
+      const scope = media && nativePlayerScope(media);
+      if (scope !== rateLabelScope) {
+        rateLabelObserver?.disconnect();
+        rateLabelScope = scope;
+        rateLabelObserver = scope ? new MutationObserver(scheduleNativeRateLabel) : null;
+      }
+      if (!scope || !Number.isFinite(media.playbackRate) || media.playbackRate <= 0) return;
+      // Webex snaps its displayed rate to its preset list. Correct only the
+      // visible numeric labels, preserving controls, menus and their listeners.
+      rateLabelObserver.disconnect();
+      const labels = [];
+      const roots = [];
+      const collect = root => {
+        roots.push(root);
+        labels.push(...root.querySelectorAll(".wxp-playback-rate-button, .vjs-playback-rate-value"));
+        root.querySelectorAll("*").forEach(element => { if (element.shadowRoot) collect(element.shadowRoot); });
+      };
+      collect(scope);
+      for (const label of labels) {
+        if (nativePlayerScope(label) !== scope) continue;
+        const suffix = label.textContent.trim().match(/[xX×]$/)?.[0] || "×";
+        const text = `${Number(media.playbackRate.toFixed(2))}${suffix}`;
+        if (label.textContent !== text) label.textContent = text;
+      }
+      for (const root of roots) rateLabelObserver.observe(root, { childList: true, characterData: true, subtree: true });
+    });
+  }
+
+  chrome.runtime.onMessage?.addListener((message, _sender, sendResponse) => {
+    if (message?.type !== "wpt-media-rate" || !["get", "set"].includes(message.action)) return;
+    const rate = globalThis.WPT_SETTINGS.parsePlaybackRate(message.value);
+    if (message.action === "set" && rate === null) {
+      sendResponse({ ok: false, error: "invalid-rate" });
+      return;
+    }
+    const primary = getPrimaryMedia();
+    if (!primary) return; // Let another recording frame answer the broadcast.
+    if (message.action === "set") {
+      const group = new Set([...getSynchronizedMedia(primary), primary, ...originalRates.keys()]);
+      const snapshot = [...group].map(media => [media, media.playbackRate, originalRates.get(media)]);
+      try {
+        for (const media of group) {
+          if (originalRates.has(media)) originalRates.set(media, rate);
+          writePlaybackRate(media, originalRates.has(media) ? Math.max(rate, settings.fastRate) : rate);
+        }
+      } catch (_) {
+        // A rejected rate must not leave split audio/video tracks at different speeds.
+        for (const [media, previous, original] of snapshot) {
+          if (original !== undefined) originalRates.set(media, original);
+          try { writePlaybackRate(media, previous); } catch (_) {}
+        }
+        sendResponse({ ok: false, error: "rate-unavailable" });
+        return;
+      }
+    }
+    sendResponse({ ok: true, rate: originalRates.get(primary) ?? primary.playbackRate });
+  });
 
   function pointInsideElement(x, y, el) {
     if (!(el instanceof Element) || !isVisible(el)) return false;
@@ -395,8 +553,12 @@
   function showSpeedBadge() {
     if (!settings.overlaysEnabled || speedBadge?.isConnected) return;
 
-    const point = getTopCenterPoint(getPrimaryMedia());
-    speedBadge = createWebexOverlay(`${settings.fastRate}×`, {
+    const media = holdPrimaryMedia || getPrimaryMedia();
+    // The configured hold target may be lower than the permanent rate. Show
+    // the actual applied rate from the first frame, including rejected writes.
+    const rate = Number.isFinite(media?.playbackRate) ? media.playbackRate : settings.fastRate;
+    const point = getTopCenterPoint(media);
+    speedBadge = createWebexOverlay(`${rate}×`, {
       minWidth: "68px",
       minHeight: "42px",
       padding: "10px 18px",
@@ -671,7 +833,7 @@
     }
 
     for (const media of originalRates.keys()) {
-      try { media.playbackRate = settings.fastRate; } catch (_) {}
+      try { writePlaybackRate(media, Math.max(originalRates.get(media), settings.fastRate)); } catch (_) {}
     }
 
     if (holdStartedPaused && holdPrimaryMedia?.paused) {
@@ -691,7 +853,7 @@
 
     for (const [media, rate] of originalRates.entries()) {
       try {
-        if (media?.isConnected) media.playbackRate = rate;
+        if (media?.isConnected) writePlaybackRate(media, rate);
       } catch (_) {}
     }
 
@@ -771,8 +933,8 @@
   }
 
   function keyboardShortcutAllowed(event) {
-    return !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !isEditableTarget(event.composedPath?.()[0] || event.target) &&
-      !isInteractiveControl(event.composedPath?.()[0] || event.target) && !event.isComposing;
+    return !event.defaultPrevented && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !isEditableTarget(event.composedPath?.()[0] || event.target) &&
+      !isInteractiveControl(event) && !event.isComposing;
   }
 
   function onKeyDown(event) {
@@ -857,15 +1019,29 @@
   }
 
   function onPointerDown(event) {
+    bubbledPointerDown.add(event);
+    if (event.defaultPrevented) {
+      nativePointerSequence = true;
+      clearSeekClickSequence();
+      nativeSideTap = null;
+      finishMouseHold();
+      suppressNextClick = false;
+      return;
+    }
     if (event.pointerType !== "mouse" || event.button !== 0) return;
-    if (isInteractiveControl(event.composedPath?.()[0] || event.target)) return;
-
     const primary = getPrimaryMedia();
-    if (!primary || !pointInsideElement(event.clientX, event.clientY, primary)) return;
+    if (!isMediaSurfaceEvent(event, primary)) {
+      clearPendingSingleClick();
+      clearSeekClickSequence();
+      finishMouseHold();
+      suppressNextClick = false;
+      return;
+    }
 
     mouseDown = true;
     mouseHoldActivated = false;
     suppressNextClick = false;
+    mouseHoldClickState = null;
 
     if (!settings.mouseHoldEnabled) return;
 
@@ -887,6 +1063,12 @@
     clearMouseTimer();
 
     if (mouseHoldActivated) {
+      // Preserve the pre-hold state through the release-generated click. A
+      // player may toggle before the bubble fallback sees that click.
+      mouseHoldClickState = {
+        media: holdPrimaryMedia,
+        paused: spaceHoldActivated ? false : holdStartedPaused
+      };
       mouseHoldActivated = false;
       if (!spaceHoldActivated) restoreTemporarySpeed();
     }
@@ -900,17 +1082,33 @@
   function onPointerCancel() {
     finishMouseHold();
     suppressNextClick = false;
+    mouseHoldClickState = null;
     clearSeekClickSequence();
   }
 
   // Only the initial side tap is delayed. Once seeking starts, every click seeks.
   function onClick(event) {
+    const primary = getPrimaryMedia();
+    const onSurface = event.button === 0 && isMediaSurfaceEvent(event, primary);
+    const snapshot = clickSnapshots.get(event);
+    const nativeMediaControl = snapshot?.media === primary &&
+      (snapshot.rate !== primary.playbackRate || snapshot.volume !== primary.volume || snapshot.muted !== primary.muted);
+    if (event.defaultPrevented || nativePointerSequence || nativeMediaControl) {
+      nativePointerSequence = false;
+      suppressNextClick = false;
+      clearPendingSingleClick();
+      clearSeekClickSequence();
+      nativeSideTap = null;
+      return;
+    }
     if (suppressNextClick) {
       suppressNextClick = false;
-      const primary = getPrimaryMedia();
       // Suppress only the synthetic click following a hold on the video.
-      if (event.button === 0 && !isInteractiveControl(event.composedPath?.()[0] || event.target) &&
-          pointInsideElement(event.clientX, event.clientY, primary)) {
+      if (onSurface) {
+        const releasedHold = mouseHoldClickState;
+        mouseHoldClickState = null;
+        if (releasedHold?.media === primary) restoreClickPlayback(primary, releasedHold.paused);
+        else if (snapshot?.media === primary) restoreClickPlayback(primary, snapshot.paused);
         event.preventDefault();
         event.stopImmediatePropagation();
         clearPendingSingleClick();
@@ -918,16 +1116,10 @@
       }
     }
 
-    if (event.button !== 0 || isInteractiveControl(event.composedPath?.()[0] || event.target) || !settings.doubleClickEnabled) {
+    if (!onSurface || !settings.doubleClickEnabled) {
       clearPendingSingleClick();
       clearSeekClickSequence();
-      return;
-    }
-
-    const primary = getPrimaryMedia();
-    if (!primary) {
-      clearPendingSingleClick();
-      clearSeekClickSequence();
+      nativeSideTap = null;
       return;
     }
 
@@ -936,20 +1128,25 @@
     if (region === "center") {
       clearPendingSingleClick();
       clearSeekClickSequence();
+      nativeSideTap = null;
       return;
     }
 
     if (region !== "left" && region !== "right") {
       clearPendingSingleClick();
       clearSeekClickSequence();
+      nativeSideTap = null;
       return;
     }
 
     event.preventDefault();
     event.stopImmediatePropagation();
 
+    const nativeToggled = snapshot?.media === primary && snapshot.paused !== primary.paused;
+
     if (seekClickSequence?.media === primary && seekClickSequence.region === region) {
       clearPendingSingleClick();
+      if (nativeToggled) restoreClickPlayback(primary, snapshot.paused);
       seekBy(region);
       extendSeekClickSequence(primary, region);
       return;
@@ -958,6 +1155,11 @@
     clearSeekClickSequence();
     if (event.detail % 2 === 1) {
       clearPendingSingleClick();
+      nativeSideTap = nativeToggled
+        ? { media: primary, region, paused: snapshot.paused, at: performance.now() } : null;
+      // Some players already toggle on the video before the event bubbles here.
+      // Do not schedule a second toggle that would immediately undo it.
+      if (nativeToggled) return;
       pendingSingleClickTimer = setTimeout(() => {
         pendingSingleClickTimer = null;
         if (primary.isConnected) togglePlayback(primary);
@@ -966,15 +1168,25 @@
     }
 
     clearPendingSingleClick();
+    if (nativeSideTap?.media === primary && nativeSideTap.region === region &&
+        performance.now() - nativeSideTap.at < SEEK_CLICK_SEQUENCE_MS) {
+      restoreClickPlayback(primary, nativeSideTap.paused);
+    } else if (nativeToggled) {
+      restoreClickPlayback(primary, snapshot.paused);
+    }
+    nativeSideTap = null;
+    nativePointerSequence = false;
     seekBy(region);
     extendSeekClickSequence(primary, region);
   }
 
   function onDoubleClick(event) {
-    if (event.button !== 0 || isInteractiveControl(event.composedPath?.()[0] || event.target) || !settings.doubleClickEnabled) return;
-
     const primary = getPrimaryMedia();
-    if (!primary) return;
+    if (event.defaultPrevented || nativePointerSequence || event.button !== 0 || !isMediaSurfaceEvent(event, primary) || !settings.doubleClickEnabled) {
+      clearPendingSingleClick();
+      clearSeekClickSequence();
+      return;
+    }
 
     const region = getVideoRegionAtPoint(event.clientX, event.clientY, primary);
     if (region === "center") {
@@ -989,11 +1201,10 @@
   }
 
   function onContextMenu(event) {
+    clearPendingSingleClick();
     clearSeekClickSequence();
-    if (!settings.rightClickRewindEnabled || isInteractiveControl(event.composedPath?.()[0] || event.target)) return;
-
     const primary = getPrimaryMedia();
-    if (!primary || !pointInsideElement(event.clientX, event.clientY, primary)) return;
+    if (event.defaultPrevented || !settings.rightClickRewindEnabled || !isMediaSurfaceEvent(event, primary)) return;
 
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -1009,10 +1220,13 @@
     clearMouseTimer();
     clearPendingSingleClick();
     clearSeekClickSequence();
+    nativeSideTap = null;
+    nativePointerSequence = false;
     spaceHoldActivated = false;
     spaceTapCancelled = false;
     mouseHoldActivated = false;
     suppressNextClick = false;
+    mouseHoldClickState = null;
 
     if (wasActive || originalRates.size) restoreTemporarySpeed();
   }
@@ -1107,15 +1321,81 @@
     launcherCheckTimer = setInterval(refreshFallbackLauncher, 4000);
   }
 
-  window.addEventListener("keydown", onKeyDown, true);
+  function restoreClickPlayback(media, paused) {
+    if (media.paused === paused) return;
+    try {
+      if (paused) media.pause();
+      else media.play()?.catch?.(() => {});
+    } catch (_) {}
+  }
+
+  // Native controls keep bubble priority. Known video surfaces get capture
+  // priority below so Webex cannot consume seeking as fullscreen/context-menu UI.
+  window.addEventListener("pointerdown", event => {
+    nativePointerSequence = false;
+    clearPendingSingleClick();
+    if (isKnownVideoSurface(event, getPrimaryMedia())) {
+      // As in the published extension, start video holds before Webex's tech
+      // listener can stop propagation. This does not cancel the pointer event.
+      onPointerDown(event);
+      return;
+    }
+    queueMicrotask(() => {
+      if (bubbledPointerDown.has(event)) return;
+      nativePointerSequence = true;
+      clearSeekClickSequence();
+      nativeSideTap = null;
+      finishMouseHold();
+      suppressNextClick = false;
+    });
+  }, true);
+  window.addEventListener("click", event => {
+    const media = getPrimaryMedia();
+    if (media) clickSnapshots.set(event, {
+      media, paused: media.paused, rate: media.playbackRate, volume: media.volume, muted: media.muted
+    });
+  }, true);
+  window.addEventListener("keydown", event => {
+    const target = event.composedPath?.()[0] || event.target;
+    const media = getPrimaryMedia();
+    // Preserve the published shortcuts when the video has focus, before
+    // Video.js consumes Space/J/K/L. Ambiguous shadow hosts use the fallback.
+    if (target === document.body || target === document.documentElement ||
+        (target === media && !media?.controls) ||
+        (target instanceof Element && !target.shadowRoot && target.matches(VIDEO_SURFACE_SELECTOR))) {
+      capturedVideoGestures.add(event);
+      onKeyDown(event);
+    }
+  }, true);
+  window.addEventListener("keydown", event => {
+    if (!capturedVideoGestures.has(event)) onKeyDown(event);
+  });
   window.addEventListener("keyup", onKeyUp, true);
-  window.addEventListener("pointerdown", onPointerDown, true);
+  window.addEventListener("pointerdown", event => {
+    if (!bubbledPointerDown.has(event)) onPointerDown(event);
+  });
   window.addEventListener("pointerup", onPointerUp, true);
   window.addEventListener("pointercancel", onPointerCancel, true);
-  window.addEventListener("click", onClick, true);
-  window.addEventListener("dblclick", onDoubleClick, true);
-  window.addEventListener("contextmenu", onContextMenu, true);
+  for (const [type, handler] of [["click", onClick], ["dblclick", onDoubleClick], ["contextmenu", onContextMenu]]) {
+    window.addEventListener(type, event => {
+      if (!isKnownVideoSurface(event, getPrimaryMedia())) return;
+      nativePointerSequence = false;
+      capturedVideoGestures.add(event);
+      handler(event);
+    }, true);
+    window.addEventListener(type, event => {
+      if (!capturedVideoGestures.has(event)) handler(event);
+    });
+  }
   window.addEventListener("blur", releaseIfFocusLost, true);
+  window.addEventListener("pagehide", () => {
+    if (rateLabelFrame !== null) cancelAnimationFrame(rateLabelFrame);
+    rateLabelFrame = null;
+    rateLabelObserver?.disconnect();
+    rateLabelObserver = null;
+    rateLabelScope = null;
+  });
+  window.addEventListener("pageshow", scheduleNativeRateLabel);
 
   document.addEventListener("fullscreenchange", moveActiveOverlaysToCurrentHost, true);
   document.addEventListener("webkitfullscreenchange", moveActiveOverlaysToCurrentHost, true);

@@ -6,6 +6,7 @@
     rewindSeconds: 5,
     forwardSeconds: 5,
     fastRate: 2,
+    customPlaybackRate: 1,
     spaceHoldEnabled: true,
     mouseHoldEnabled: true,
     doubleClickEnabled: true,
@@ -39,8 +40,15 @@
   }
 
   function validRate(value) {
-    const number = Number(value);
-    return RATES.includes(number) ? number : DEFAULTS.fastRate;
+    return parsePlaybackRate(value) ?? DEFAULTS.fastRate;
+  }
+
+  // Both rate controls accept intermediate values; RATES remains the preset list.
+  function parsePlaybackRate(value) {
+    if (!["number", "string"].includes(typeof value) || String(value).trim() === "") return null;
+    const number = Number(String(value).trim().replace(",", "."));
+    return Number.isFinite(number) && number >= 0.25 && number <= 4
+      ? Math.round(number * 100) / 100 : null;
   }
 
   function normalize(raw = {}) {
@@ -51,6 +59,7 @@
     normalized.rewindSeconds = clampSeek(raw.rewindSeconds);
     normalized.forwardSeconds = clampSeek(raw.forwardSeconds, DEFAULTS.forwardSeconds);
     normalized.fastRate = validRate(raw.fastRate);
+    normalized.customPlaybackRate = parsePlaybackRate(raw.customPlaybackRate) ?? DEFAULTS.customPlaybackRate;
     normalized.volumeStep = clampVolumeStep(raw.volumeStep);
     normalized.language = typeof raw.language === "string" && raw.language.trim()
       ? raw.language : DEFAULTS.language;
@@ -59,6 +68,6 @@
 
   globalThis.WPT_SETTINGS = Object.freeze({
     DEFAULTS, RATES, MIN_SEEK_SECONDS, MAX_SEEK_SECONDS,
-    MIN_VOLUME_STEP, MAX_VOLUME_STEP, clampSeek, clampVolumeStep, validRate, normalize
+    MIN_VOLUME_STEP, MAX_VOLUME_STEP, clampSeek, clampVolumeStep, validRate, parsePlaybackRate, normalize
   });
 })();

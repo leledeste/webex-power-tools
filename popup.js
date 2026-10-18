@@ -2,7 +2,7 @@
   "use strict";
 
   // Shared validation keeps popup values and playback behavior consistent.
-  const { DEFAULTS, clampSeek, clampVolumeStep, validRate } = globalThis.WPT_SETTINGS;
+  const { DEFAULTS, clampSeek, clampVolumeStep, validRate, parsePlaybackRate } = globalThis.WPT_SETTINGS;
 
   const i18n = globalThis.WPT_I18N.createTranslator(DEFAULTS.language);
 
@@ -44,6 +44,24 @@
   const presetButtons = [...document.querySelectorAll("[data-preset]")];
   let statusTimer = null;
   let currentLanguageSetting = DEFAULTS.language;
+  const rateInput = document.getElementById("customPlaybackRate");
+  const rateSelect = document.getElementById("permanentRate");
+  const customSpeedForm = document.getElementById("customSpeedForm");
+  const rateStatus = document.getElementById("customSpeedStatus");
+  const applyRateButton = document.getElementById("applyCustomSpeed");
+  const normalRateButton = document.getElementById("normalSpeed");
+  let rateBusy = false;
+  let rateEdited = false;
+  let currentRate = null;
+  let rateError = null;
+  let rateRequestVersion = 0;
+  let focusRateSelect = false;
+  const holdEditor = document.getElementById("customHoldEditor");
+  const holdInput = document.getElementById("customHoldRate");
+  const holdButton = document.getElementById("applyCustomHold");
+  const holdStatus = document.getElementById("customHoldStatus");
+  let savedHoldRate = DEFAULTS.fastRate;
+  let invalidHoldRate = false;
 
   // Use textContent for translated strings; translations never become HTML.
   function applyTranslations() {
@@ -59,7 +77,144 @@
     });
 
     elements.languageSearch.setAttribute("aria-label", i18n.t("languageSearchLabel"));
+    renderRateStatus();
+    if (invalidHoldRate) holdStatus.textContent = i18n.t("rateInvalid");
   }
+
+  function selectHoldRate(rate) {
+    holdInput.value = rate;
+    elements.fastRate.value = globalThis.WPT_SETTINGS.RATES.includes(rate) ? String(rate) : "custom";
+    holdEditor.hidden = elements.fastRate.value !== "custom";
+  }
+
+  function saveHoldRate(value) {
+    const rate = parsePlaybackRate(value);
+    if (rate === null) {
+      invalidHoldRate = true;
+      holdInput.setAttribute("aria-invalid", "true");
+      holdStatus.textContent = i18n.t("rateInvalid");
+      return;
+    }
+    invalidHoldRate = false;
+    holdInput.removeAttribute("aria-invalid");
+    holdStatus.textContent = "";
+    elements.fastRate.disabled = holdInput.disabled = holdButton.disabled = true;
+    chrome.storage.sync.set({ fastRate: rate }, () => {
+      const error = chrome.runtime.lastError;
+      const focusSelect = holdEditor.contains(document.activeElement);
+      if (!error) savedHoldRate = rate;
+      selectHoldRate(savedHoldRate);
+      elements.fastRate.disabled = holdInput.disabled = holdButton.disabled = false;
+      if (focusSelect && holdEditor.hidden) elements.fastRate.focus();
+      showStatus(error ? i18n.t("saveFailed", { error: error.message }) : i18n.t("saved"));
+    });
+  }
+
+  document.getElementById("customHoldForm").addEventListener("submit", event => {
+    event.preventDefault();
+    saveHoldRate(holdInput.value);
+  });
+  holdInput.addEventListener("input", () => {
+    invalidHoldRate = false;
+    holdInput.removeAttribute("aria-invalid");
+    holdStatus.textContent = "";
+  });
+
+  function renderRateStatus() {
+    rateStatus.textContent = rateError ? i18n.t(rateError)
+      : currentRate === null ? "" : i18n.t("customSpeedCurrent", { value: currentRate });
+  }
+
+  function selectPlaybackRate(rate) {
+    // Keep the same presets as the hold-speed menu; intermediate rates use Custom.
+    const value = String(rate);
+    rateSelect.value = [...rateSelect.options].some(option => option.value === value) ? value : "custom";
+    customSpeedForm.hidden = rateSelect.value !== "custom";
+    if (customSpeedForm.hidden && customSpeedForm.contains(document.activeElement)) {
+      if (rateBusy) focusRateSelect = true;
+      else rateSelect.focus();
+    }
+  }
+
+  function requestPlaybackRate(action, value) {
+    return new Promise(resolve => {
+      chrome.runtime.sendMessage({ type: "wpt-playback-rate", action, value }, response => {
+        const error = chrome.runtime.lastError;
+        resolve(error ? { ok: false, error: "no-recording" } : response || { ok: false });
+      });
+    });
+  }
+
+  async function readPlaybackRate() {
+    if (rateBusy || !rateInput.isConnected) return;
+    const requestVersion = ++rateRequestVersion;
+    const response = await requestPlaybackRate("get");
+    if (requestVersion !== rateRequestVersion || rateBusy || rateEdited || !rateInput.isConnected) return;
+    currentRate = response.ok && Number.isFinite(response.rate) ? response.rate : null;
+    rateError = currentRate === null ? "rateUnavailable" : null;
+    if (currentRate !== null) {
+      rateInput.value = currentRate;
+      selectPlaybackRate(currentRate);
+    }
+    renderRateStatus();
+  }
+
+  async function applyPlaybackRate(value) {
+    if (rateBusy) return;
+    const rate = parsePlaybackRate(value);
+    if (rate === null) {
+      rateInput.setAttribute("aria-invalid", "true");
+      rateError = "rateInvalid";
+      renderRateStatus();
+      return;
+    }
+    rateBusy = true;
+    rateInput.removeAttribute("aria-invalid");
+    rateRequestVersion++;
+    rateSelect.disabled = rateInput.disabled = applyRateButton.disabled = normalRateButton.disabled = true;
+    try {
+      const response = await requestPlaybackRate("set", rate);
+      if (!response.ok) {
+        rateError = response.error === "invalid-rate" ? "rateInvalid" : "rateUnavailable";
+        if (rateSelect.value !== "custom") selectPlaybackRate(currentRate ?? rateInput.value);
+      } else {
+        currentRate = response.rate;
+        rateInput.value = rate;
+        selectPlaybackRate(rate);
+        rateEdited = false;
+        rateError = null;
+        // Save only the reusable input value, never recording state or its URL.
+        savePartial({ customPlaybackRate: rate });
+      }
+      renderRateStatus();
+    } finally {
+      rateBusy = false;
+      rateSelect.disabled = rateInput.disabled = applyRateButton.disabled = normalRateButton.disabled = false;
+      if (focusRateSelect) {
+        focusRateSelect = false;
+        rateSelect.focus();
+      }
+    }
+  }
+
+  rateInput.addEventListener("input", () => { rateEdited = true; rateInput.removeAttribute("aria-invalid"); });
+  rateSelect.addEventListener("change", () => {
+    if (rateSelect.value === "custom") {
+      rateEdited = true;
+      rateRequestVersion++;
+      customSpeedForm.hidden = false;
+      rateInput.focus();
+    } else {
+      customSpeedForm.hidden = true;
+      applyPlaybackRate(rateSelect.value);
+    }
+  });
+  customSpeedForm.addEventListener("submit", event => {
+    event.preventDefault();
+    applyPlaybackRate(rateInput.value);
+  });
+  normalRateButton.addEventListener("click", () => applyPlaybackRate(1));
+  window.addEventListener("focus", readPlaybackRate);
 
   function showStatus(message) {
     if (statusTimer !== null) clearTimeout(statusTimer);
@@ -232,7 +387,13 @@
 
     elements.rewind.value = clampSeek(settings.rewindSeconds, DEFAULTS.rewindSeconds);
     elements.forward.value = clampSeek(settings.forwardSeconds, DEFAULTS.forwardSeconds);
-    elements.fastRate.value = String(validRate(settings.fastRate));
+    savedHoldRate = validRate(settings.fastRate);
+    selectHoldRate(savedHoldRate);
+    invalidHoldRate = false;
+    holdInput.removeAttribute("aria-invalid");
+    holdStatus.textContent = "";
+    rateInput.value = currentRate ?? settings.customPlaybackRate;
+    selectPlaybackRate(rateInput.value);
     elements.spaceHold.checked = settings.spaceHoldEnabled !== false;
     elements.mouseHold.checked = settings.mouseHoldEnabled !== false;
     elements.doubleClick.checked = settings.doubleClickEnabled !== false;
@@ -251,7 +412,7 @@
   function savePartial(partial, messageKey = "saved", vars = {}) {
     chrome.storage.sync.set(partial, () => {
       showStatus(chrome.runtime.lastError
-        ? `Unable to save settings: ${chrome.runtime.lastError.message}`
+        ? i18n.t("saveFailed", { error: chrome.runtime.lastError.message })
         : i18n.t(messageKey, vars));
     });
   }
@@ -259,7 +420,8 @@
   chrome.storage.sync.get(DEFAULTS, raw => {
     const error = chrome.runtime.lastError;
     render(raw || DEFAULTS);
-    if (error) showStatus(`Unable to load settings: ${error.message}`);
+    if (error) showStatus(i18n.t("loadFailed", { error: error.message }));
+    readPlaybackRate();
   });
 
   elements.languageButton.addEventListener("click", () => {
@@ -299,7 +461,12 @@
   });
 
   elements.fastRate.addEventListener("change", () => {
-    savePartial({ fastRate: validRate(elements.fastRate.value) });
+    if (elements.fastRate.value === "custom") {
+      holdEditor.hidden = false;
+      holdInput.focus();
+    } else {
+      saveHoldRate(elements.fastRate.value);
+    }
   });
 
   elements.spaceHold.addEventListener("change", () =>
@@ -350,7 +517,7 @@
   elements.reset.addEventListener("click", () => {
     chrome.storage.sync.set(DEFAULTS, () => {
       if (chrome.runtime.lastError) {
-        showStatus(`Unable to restore defaults: ${chrome.runtime.lastError.message}`);
+        showStatus(i18n.t("resetFailed", { error: chrome.runtime.lastError.message }));
         return;
       }
       render(DEFAULTS);

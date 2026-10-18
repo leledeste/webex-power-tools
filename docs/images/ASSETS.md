@@ -14,7 +14,8 @@ Final prompt:
 ## Documentation images
 
 `settings.png` is a full-page capture of the production English popup using mocked
-Chrome storage. `overview.svg` embeds that capture and the runtime icon alongside
+Chrome storage (a 2.35× hold target) and a synthetic 1.85× playback-rate response.
+`overview.svg` embeds that capture and the runtime icon alongside
 an illustrative player with the exact 25% / 50% / 25% gesture zones. `overview.png`
 is its browser-rendered 1600 × 1000 export. No real recording content is included.
 

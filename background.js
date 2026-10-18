@@ -38,6 +38,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Returning true keeps the response channel open for the asynchronous action APIs.
   if (!message || typeof message !== "object") return;
 
+  if (message.type === "wpt-playback-rate" && ["get", "set"].includes(message.action)) {
+    // Target the active tab only; normal tab queries need no additional permission.
+    // Each matching frame controls its own primary/synchronized media group.
+    chrome.tabs.query({ active: true, currentWindow: true })
+      .then(([tab]) => {
+        if (tab?.id == null) throw new Error("No active tab");
+        return chrome.tabs.sendMessage(tab.id, {
+          type: "wpt-media-rate", action: message.action, value: message.value
+        });
+      })
+      .then(response => sendResponse(response || { ok: false, error: "no-recording" }))
+      .catch(() => sendResponse({ ok: false, error: "no-recording" }));
+    return true;
+  }
+
   if (message.type === "wpt-get-toolbar-state") {
     chrome.action.getUserSettings()
       .then((settings) => {

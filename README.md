@@ -6,19 +6,20 @@ Hold to speed up, skip with mouse gestures, and control playback and audio with 
 
 ![Webex Power Tools: playback gestures and English settings](docs/images/overview.png)
 
-**Version 1.0** · Chrome 127+ · Manifest V3 · No build step
+**Version 1.1** · Chrome 127+ · Manifest V3 · No build step
 
-[Download v1.0.0][github-release] · [Chrome Web Store][chrome-web-store] · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPMENT.md) · [Privacy](docs/PRIVACY.md)
+[Download v1.1.0][github-release] · [Chrome Web Store][chrome-web-store] · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPMENT.md) · [Privacy](docs/PRIVACY.md)
 
-> The store link currently opens the Chrome Web Store homepage. Replace the `chrome-web-store` reference at the bottom of this file with the extension's listing URL once available. Until then, install locally using the steps below.
+> Chrome Web Store updates require Google's review. If the store still offers an earlier version, download v1.1.0 from GitHub and install it locally.
 
 ## Features
 
-- **Hold to speed up:** hold Space or left click over the video. Release to restore the original speed. If playback was paused, it pauses again on release.
+- **Custom playback speed:** choose a preset or enter an intermediate value from 0.25× to 4×. The selected speed stays active after closing the popup.
+- **Hold to speed up:** hold Space or left click over the video to use the greater of the current speed and your hold target. Release to restore the original speed and paused/playing state.
 - **Quick seeking:** double-click the left or right quarter to start seeking, then each extra click on that side adds another seek step. Right-click the video to seek backward.
 - **Keyboard controls:** J/K/L for seeking and play/pause, ↑/↓ for volume, and M for reversible mute.
 - **Custom settings:** independent backward/forward durations, temporary speed, volume steps, and individual feature switches.
-- **On-screen indicators:** temporary speed, cumulative seek actions, volume, and mute feedback.
+- **On-screen indicators:** actual playback speed during holds, cumulative seek actions, volume, and mute feedback. The native Webex toolbar also shows the effective playback speed.
 - **14 languages:** automatic browser-language detection, searchable language selection, and Arabic right-to-left layout.
 - **Synced preferences:** settings use Chrome extension sync storage, according to your profile and sync configuration.
 
@@ -33,7 +34,23 @@ Hold to speed up, skip with mouse gestures, and control playback and audio with 
 
 No Node.js installation, package installation, or build command is needed to use the extension. When unpinned, it also displays a floating settings launcher on supported Webex pages.
 
+After updating the local files, reload the extension in `chrome://extensions`
+and refresh each open Webex recording as well. Both steps are required to load
+the updated content script.
+
 ## Controls at a glance
+
+In the extension popup, **Playback speed** offers the same presets as **Hold to
+speed up**, plus **1×** and **Custom…**. Presets apply immediately. Choose Custom
+to enter 0.25×–4×, such as 0.85×, 1.15× or 1.85×, then choose **Apply** or press
+Enter. **1×** restores normal speed.
+
+**Hold to speed up** also offers **Custom…** for an independent temporary target
+from 0.25× to 4×. Apply the value once; Space and mouse holds use it and restore
+the previous rate on release. A faster existing playback rate is preserved:
+with permanent playback at 3× and a hold target of 2×, playback stays at 3×.
+Equal speeds stay unchanged. Both the hold indicator and Webex toolbar show
+the actual rate.
 
 | Control | Action |
 | --- | --- |
@@ -56,12 +73,14 @@ Shortcuts are ignored in editable fields, focused interactive controls, text com
 | Setting | Default | Available values |
 | --- | --- | --- |
 | Seek backward / forward | 5 seconds each | 1–120 seconds; presets: 5, 10, 15, 30 |
-| Temporary speed | 2× | 1.25×, 1.5×, 1.75×, 2×, 2.5×, 3×, 4× |
+| Playback speed | Current player rate | 1×, the hold-speed presets, or Custom: 0.25×–4× |
+| Temporary speed | 2× | 1.25×, 1.5×, 1.75×, 2×, 2.5×, 3×, 4×, or Custom: 0.25×–4× |
 | Volume step | 5% | 1–25% |
 | Language | Automatic | Browser language or explicit selection |
 | Gesture, shortcut, and indicator switches | Enabled | Individually configurable |
 
-Settings save automatically. **Restore defaults** resets all preferences, including language.
+Preference changes save automatically; numeric custom speeds require **Apply**
+or Enter. **Restore defaults** resets saved preferences, including language.
 
 ## Compatibility and privacy
 
@@ -79,9 +98,9 @@ Chrome 127+ is required for the floating launcher's programmatic popup API. See 
 | [Developer guide](docs/DEVELOPMENT.md) | Architecture, storage schema, checks, and local development |
 | [Localization](LOCALIZATION.md) | Supported languages and translation conventions |
 | [Privacy](docs/PRIVACY.md) | Data handling and permissions |
-| [Release checklist](docs/RELEASE.md) | Packaging, manual verification, and store-link replacement |
+| [Release checklist](docs/RELEASE.md) | Packaging, manual verification, and store listing |
 | [Code review notes](docs/AUDIT.md) | Cleanup, fixes, and verification boundaries |
-| [Changelog](CHANGELOG.md) | Version 1.0 features |
+| [Changelog](CHANGELOG.md) | Published features and unreleased changes |
 
 The overview combines an illustrative player with the actual English settings UI. The [full settings image](docs/images/settings.png) is rendered from the production popup with mocked Chrome storage and contains no real meeting content.
 
@@ -102,4 +121,4 @@ Webex Power Tools is an independent project and is not affiliated with or endors
 Released under the [MIT License](LICENSE).
 
 [chrome-web-store]: https://chromewebstore.google.com/detail/webex-power-tools/bihikhjjclgaohmddmajcmlhkhjdjgel
-[github-release]: https://github.com/leledeste/webex-power-tools/releases/tag/v1.0.0
+[github-release]: https://github.com/leledeste/webex-power-tools/releases/tag/v1.1.0

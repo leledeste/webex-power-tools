@@ -32,11 +32,46 @@ This works with on-screen indicators disabled and respects custom Back/Forward d
 
 Right-click seeking applies anywhere over the video outside interactive controls. It replaces the usual context menu while enabled; switch it off to restore the context menu.
 
+## Custom sustained playback speed
+
+Open the **Playback speed** dropdown in the extension popup. Its presets match
+**Hold to speed up**: 1.25×, 1.5×, 1.75×, 2×, 2.5×, 3× and 4×; it also includes
+**1×**. Selecting a preset applies it immediately. Select **Custom…** to show the
+numeric editor. Enter 0.25×–4×, including intermediate values such as 0.85×,
+1.15× or 1.85×, then choose **Apply** or press
+Enter. Values are rounded to two decimal places; **1×** restores normal speed.
+This applies to media in the current Webex tab, including matching frames and
+synchronized audio/video tracks. Other tabs keep their speed.
+
+The rate remains active after closing the popup, pausing and resuming, until you
+change it or Webex replaces/reloads the player. Chrome saves the last applied
+custom input for reuse; it does not automatically impose it on new recordings.
+The popup reads the current rate when reopened. The native Webex toolbar label
+also shows the actual speed, including intermediate values and rates such as
+3× outside the native preset list. It follows temporary holds and restores the
+base speed on release. The native menu keeps its own preset options; use the
+extension to choose custom values.
+
+Temporary Space/mouse holds restore this selected speed afterward. A faster
+base rate is preserved during the hold. Changing the rate during an active hold
+changes what is restored on release. Playback remains paused if it was paused
+before applying a custom rate. No new extension permission is required.
+
 ## Temporary playback speed
 
-Choose 1.25×, 1.5×, 1.75×, 2×, 2.5×, 3×, or 4×. The default is 2×. Hold Space or left click over the video for at least 180 ms. Release to restore each affected element's original rate. A paused primary player runs during the hold and pauses again afterward.
+Choose 1.25×, 1.5×, 1.75×, 2×, 2.5×, 3×, or 4×. Select **Custom…** to enter
+0.25×–4×, including intermediate values such as 1.85× or 2.35×, then choose
+**Apply** or press Enter. Chrome saves this hold target independently of the
+permanent playback speed. A value matching a preset selects that preset again.
+The default is 2×. Hold Space or left click over the video for at least 180 ms.
+Release to restore each affected element's original rate. A paused primary
+player runs during the hold and pauses again afterward.
 
-The selected rate is absolute: 2× means 2× even if playback was previously at 3×. Space and mouse holds can overlap; speed restores after the final active release. Losing focus or switching away also ends the hold. Disabling a hold feature cancels that active gesture when no other hold is active.
+The hold rate is a minimum: a 2× hold preserves a base already at 3×. Space and mouse holds can overlap; speed restores after the final active release. Losing focus or switching away also ends the hold. Disabling a hold feature cancels that active gesture when no other hold is active.
+
+Equal base and hold speeds stay unchanged. The hold indicator shows the actual
+rate from the moment it appears: a 3× base with a 2× target displays 3×, matching
+the native Webex toolbar.
 
 A quick Space press toggles playback. Turning off **Spacebar** disables its speed hold but preserves tap-to-play/pause. Turning off **Hold left click** affects only that mouse gesture.
 

@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Webex Power Tools",
+    "description": "Product name. Keep the brand unchanged in every language."
+  },
+  "extensionDescription": {
+    "message": "Enhanced Webex recording controls: hold to speed up, seek gestures, keyboard shortcuts, reversible mute and on-screen indicators.",
+    "description": "Short extension summary shown by Chrome and the Chrome Web Store. Maximum 132 characters."
+  }
+}

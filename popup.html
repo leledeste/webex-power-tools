@@ -15,7 +15,7 @@
         <div class="brand-copy">
           <div class="title-line">
             <h1>Webex Power Tools</h1>
-            <span class="version" data-extension-version>v1.0</span>
+            <span class="version" data-extension-version>v1.1</span>
           </div>
           <p data-i18n="appSubtitle">Advanced controls for Webex recordings</p>
         </div>
@@ -78,6 +78,32 @@
         <span class="section-icon" aria-hidden="true">▶</span>
       </div>
 
+      <div class="inline-setting">
+        <strong id="permanentRateLabel" data-i18n="permanentSpeed">Playback speed</strong>
+        <select id="permanentRate" class="compact-select" aria-labelledby="permanentRateLabel">
+          <option value="1">1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="1.75">1.75×</option>
+          <option value="2">2×</option>
+          <option value="2.5">2.5×</option>
+          <option value="3">3×</option>
+          <option value="4">4×</option>
+          <option value="custom" data-i18n="customSpeedOption">Custom…</option>
+        </select>
+      </div>
+      <form id="customSpeedForm" class="custom-rate-editor" novalidate hidden>
+        <div class="unit-input">
+          <input id="customPlaybackRate" type="number" min="0.25" max="4" step="0.01" value="1" inputmode="decimal" aria-labelledby="permanentRateLabel" aria-describedby="customSpeedHint customSpeedStatus" required>
+          <span>×</span>
+        </div>
+        <button id="applyCustomSpeed" type="submit" data-i18n="applySpeed">Apply</button>
+        <button id="normalSpeed" type="button">1×</button>
+      </form>
+      <p id="customSpeedHint" class="zone-note" data-i18n="customSpeedHint">Choose 0.25×–4×, including intermediate speeds. Applies to the current recording.</p>
+      <p id="customSpeedStatus" class="custom-speed-status" role="status"></p>
+      <div class="divider"></div>
+
       <div class="seek-grid">
         <label class="field">
           <span data-i18n="rewind">Back</span>
@@ -122,10 +148,23 @@
           <option value="2.5">2.5×</option>
           <option value="3">3×</option>
           <option value="4">4×</option>
+          <option value="custom" data-i18n="customSpeedOption">Custom…</option>
         </select>
       </div>
 
-      <div class="setting-row">
+      <div id="customHoldEditor" hidden>
+        <form id="customHoldForm" class="custom-rate-editor custom-hold-editor" novalidate>
+          <div class="unit-input">
+            <input id="customHoldRate" type="number" min="0.25" max="4" step="0.01" value="2" inputmode="decimal" aria-labelledby="fastRateLabel" aria-describedby="customHoldHint customHoldStatus" required>
+            <span>×</span>
+          </div>
+          <button id="applyCustomHold" type="submit" data-i18n="applySpeed">Apply</button>
+        </form>
+        <p id="customHoldHint" class="zone-note" data-i18n="customHoldSpeedHint">Choose 0.25×–4×. Release to restore playback speed; faster playback stays unchanged.</p>
+        <p id="customHoldStatus" class="custom-speed-status" role="status"></p>
+      </div>
+
+      <div class="setting-row space-key-row">
         <div class="setting-main">
           <div>
             <strong id="label-spaceKey" data-i18n="spaceKey">Space key</strong>
@@ -283,7 +322,7 @@
       </button>
 
       <div id="infoPanel" class="info-panel" hidden>
-        <strong>Webex Power Tools <span data-extension-version>v1.0</span></strong>
+        <strong>Webex Power Tools <span data-extension-version>v1.1</span></strong>
         <p data-i18n="infoText">
           Settings are stored by Chrome and applied to Webex recordings. The extension does not collect recording data.
         </p>

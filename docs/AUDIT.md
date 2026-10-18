@@ -1,8 +1,18 @@
-# Code review and cleanup — version 1.0
+# Code review and verification
 
 ## Scope
 
-Reviewed all original JavaScript, popup markup/styles, manifest, translation dictionaries, flags/icons, README, and localization notes. This folder was not a Git checkout, so historical/upstream changes could not be compared.
+The initial review covered all original JavaScript, popup markup/styles, manifest, translation dictionaries, flags/icons, README, and localization notes. At that time the folder was not a Git checkout. The later comparison with upstream is recorded below.
+
+## GitHub baseline and custom-speed regression review — 2026-10-18
+
+Downloaded the public source at [commit 5b82e11](https://github.com/leledeste/webex-power-tools/commit/5b82e119f3e11ed65aaa0cfcbc993e23072dbce2). Rebuilt the content script from that source with the reviewed custom-speed and control-guard changes; 46 original functions remain unchanged. Version 1.0.0, MIT licensing, existing icons, translations, keyboard/audio controls and the launcher are retained. Previously discarded feature experiments are not included.
+
+The changes add sustained and temporary intermediate speeds, actual-rate labels in the native Webex toolbar, native-menu protection and popup styling fixes. Exposed video surfaces retain the original capture priority for seeking and hold gestures. Native menus use their own handlers. Mouse release preserves the pre-hold playback state through the generated click.
+
+Verification covers 10 Node test groups, 112 browser fixture checks and 96 checks with the unpacked extension loaded in a disposable Chrome profile. The last group uses real Chrome messaging and mouse sequences against deterministic media fixtures, including native handlers that consume clicks, pointer-down, double-click, context-menu and keyboard events. Both initially paused and playing mouse holds are checked, together with native menus, custom rates and toolbar labels. Fixtures do not decode an authenticated Webex recording; live validation remains required before release.
+
+Tests, results and baseline downloads remain local and are excluded from runtime packages. The original published ZIPs are preserved. The custom-speed changes are included in version 1.1.0. The user confirmed that the updated extension works on their Webex recording; this is separate from the automated fixture results. GitHub release and Chrome Web Store review status are recorded through their respective publishing systems.
 
 ## Findings resolved
 

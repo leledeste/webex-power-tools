@@ -12,10 +12,10 @@ async function main() {
   try {
     const page = await browser.newPage({ viewport: { width: 420, height: 650 }, deviceScaleFactor: 2 });
     await page.addInitScript(({ version }) => {
-      const preferences = { language: 'en' };
+      const preferences = { language: 'en', fastRate: 2.35 };
       globalThis.chrome = {
         i18n: { getUILanguage: () => 'en-US' },
-        runtime: { getManifest: () => ({ version }) },
+        runtime: { getManifest: () => ({ version }), sendMessage: (_message, callback) => queueMicrotask(() => callback({ ok: true, rate: 1.85 })) },
         storage: { sync: {
           get: (defaults, callback) => queueMicrotask(() => callback({ ...defaults, ...preferences })),
           set: (values, callback) => { Object.assign(preferences, values); queueMicrotask(() => callback?.()); }
